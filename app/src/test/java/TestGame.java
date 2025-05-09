@@ -22,7 +22,7 @@ public class TestGame {
     public void testOriginal() {
         String testProperties = "properties/test1.properties";
         String logResult = runningGame(testProperties);
-        assertTrue(logResult.contains("Bid:1-160"));
+        assertTrue(logResult.contains("Bid:1-140"));
         assertTrue(logResult.contains("Trump: C"));
         assertTrue(logResult.contains("Melding Scores: 190-0"));
         assertTrue(logResult.contains("Trick Winning: P0:9D,10C,12H,13H,11S,12S,11H,12C,13D,12C,13C,12S,1C,1D,1C,13D-P1:9H,10H,12H,1H,11C,13C,11S,1S"));
@@ -35,7 +35,7 @@ public class TestGame {
         String testProperties = "properties/test2.properties";
         String logResult = runningGame(testProperties);
         System.out.println("logResult = " + logResult);
-        assertTrue(logResult.contains("Bid:1-160"));
+        assertTrue(logResult.contains("Bid:1-30"));
         assertTrue(logResult.contains("Trump: C"));
         assertTrue(logResult.contains("Melding Scores: 190-30"));
     }

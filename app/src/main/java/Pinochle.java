@@ -29,7 +29,7 @@ public class Pinochle extends CardGame {
     public final int nbStartCards = 12;
     private final int handWidth = 400;
     private final int trickWidth = 40;
-    private int currentBid = 20;
+    private int currentBid = 0;
     private final Deck deck = new Deck(Suit.values(), Rank.values(), "cover");
     private final Location[] handLocations = {
             new Location(350, 625),
@@ -157,53 +157,66 @@ public class Pinochle extends CardGame {
                 Rank.TEN.getRankCardValue() + trumpSuit);
     }
 
-    private int checkTenToAceRun(List<Card> list) {
+    private List<String> checkTenToAceRun(List<Card> list) {
         List<String> cardsToCheck = getTenToAceCards();
         if (checkCardInList(list, cardsToCheck)) {
-            return 150;
+            return cardsToCheck;
         }
-        return 0;
+        return null;
     }
 
-    private int checkAceRunExtraKing(List<Card> list) {
+    private List<String> checkAceRunExtraKing(List<Card> list) {
         List<String> cardsToCheck = new ArrayList<>(getTenToAceCards());
         cardsToCheck.add(Rank.KING.getRankCardValue() + trumpSuit);
         if (checkCardInList(list, cardsToCheck)) {
-            return 190;
+            return cardsToCheck;
         }
-        return 0;
+        return null;
     }
 
-    private int checkAceRunExtraQueen(List<Card> list) {
+    private List<String> checkAceRunExtraQueen(List<Card> list) {
         List<String> cardsToCheck = new ArrayList<>(getTenToAceCards());
         cardsToCheck.add(Rank.QUEEN.getRankCardValue() + trumpSuit);
 
         if (checkCardInList(list, cardsToCheck)) {
-            return 190;
+            return cardsToCheck;
         }
-        return 0;
+        return null;
     }
 
-    private int checkRoyalMarriage(List<Card> list) {
+    private List<String> checkRoyalMarriage(List<Card> list) {
         List<String> cardsToCheck = Arrays.asList(
                 Rank.QUEEN.getRankCardValue() + trumpSuit,
                 Rank.KING.getRankCardValue() + trumpSuit);
         if (checkCardInList(list, cardsToCheck)) {
-            return 40;
+            return cardsToCheck;
         }
-        return 0;
+        return null;
     }
 
     private int calculateMeldingScore(List<Card> list) {
         int score = 0;
-        if (checkAceRunExtraKing(list) > 0) {
-            score = checkAceRunExtraKing(list);
-        } else if (checkAceRunExtraQueen(list) > 0) {
-            score = checkAceRunExtraQueen(list);
-        } else if (checkTenToAceRun(list) > 0) {
-            score = checkTenToAceRun(list);
-        } else if (checkRoyalMarriage(list) > 0) {
-            score = checkRoyalMarriage(list);
+        List<String> cardsToRemove = checkAceRunExtraKing(list);
+        if (cardsToRemove != null) {
+            score += 190;
+            list = removeCardFromList(list, cardsToRemove);
+        }
+        cardsToRemove = checkAceRunExtraQueen(list);
+        if (cardsToRemove != null) {
+            score += 190;
+            list = removeCardFromList(list, cardsToRemove);
+        }
+
+        cardsToRemove = checkTenToAceRun(list);
+        if (cardsToRemove != null) {
+            score += 150;
+            list = removeCardFromList(list, cardsToRemove);
+        }
+
+        cardsToRemove = checkRoyalMarriage(list);
+        if (cardsToRemove != null) {
+            score += 40;
+            list = removeCardFromList(list, cardsToRemove);
         }
         return score;
     }
@@ -285,6 +298,20 @@ public class Pinochle extends CardGame {
             cardsToRemove.remove(cardName);
         }
         return cardsToRemove.isEmpty();
+    }
+
+    private List<Card> removeCardFromList(List<Card> cardList, List<String> cardsToRemove) {
+        List<Card> newCardList = new ArrayList<>();
+        List<String> newCardsToRemove = new ArrayList<>(cardsToRemove);
+        for (Card card : cardList) {
+            String cardName = getCardName(card);
+            if (newCardsToRemove.contains(cardName)) {
+                newCardsToRemove.remove(cardName);
+            } else {
+                newCardList.add(card);
+            }
+        }
+        return newCardList;
     }
 
     public Card getRandomCardForHand(Hand hand) {
