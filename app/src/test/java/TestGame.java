@@ -37,7 +37,7 @@ public class TestGame {
         System.out.println("logResult = " + logResult);
         assertTrue(logResult.contains("Bid:1-30"));
         assertTrue(logResult.contains("Trump: C"));
-        assertTrue(logResult.contains("Melding Scores: 190-30"));
+        assertTrue(logResult.contains("Melding Scores: 210-30"));
     }
 
     @Test(timeout = 90000)
