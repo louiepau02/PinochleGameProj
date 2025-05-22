@@ -6,14 +6,14 @@ public class KingDecorator extends MeldDecorator {
 
     @Override
     public int getScore() {
-        int score = decoratedAceRun.getScore();
+        int score = decoratedMeld.getScore();
         score += 40;
         return score;
     }
 
     @Override
     public List<String> getHandToCheck() {
-        List<String> handToCheck = decoratedAceRun.getHandToCheck();
+        List<String> handToCheck = decoratedMeld.getHandToCheck();
         handToCheck.add((Rank.KING.getRankCardValue() + Pinochle.trumpSuit));
 
         return handToCheck;

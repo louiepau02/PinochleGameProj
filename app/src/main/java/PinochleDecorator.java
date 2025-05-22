@@ -6,14 +6,14 @@ public class PinochleDecorator extends MeldDecorator {
 
     @Override
     public int getScore() {
-        int score = decoratedAceRun.getScore();
+        int score = decoratedMeld.getScore();
         score += 40;
         return score;
     }
 
     @Override
     public List<String> getHandToCheck() {
-        List<String> handToCheck = decoratedAceRun.getHandToCheck();
+        List<String> handToCheck = decoratedMeld.getHandToCheck();
         handToCheck.addAll(Arrays.asList(
             Rank.JACK.getRankCardValue() + Suit.DIAMONDS.getSuitShortHand(),
             Rank.QUEEN.getRankCardValue() + Suit.SPADES.getSuitShortHand()

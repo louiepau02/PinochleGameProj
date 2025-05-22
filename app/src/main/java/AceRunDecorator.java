@@ -6,14 +6,14 @@ public class AceRunDecorator extends MeldDecorator {
 
     @Override
     public int getScore() {
-        int score = decoratedAceRun.getScore();
+        int score = decoratedMeld.getScore();
         score += 150;
         return score;
     }
 
     @Override
     public List<String> getHandToCheck() {
-        List<String> handToCheck = decoratedAceRun.getHandToCheck();
+        List<String> handToCheck = decoratedMeld.getHandToCheck();
         handToCheck.addAll(Arrays.asList(
             Rank.ACE.getRankCardValue() + Pinochle.trumpSuit,
             Rank.JACK.getRankCardValue() + Pinochle.trumpSuit,

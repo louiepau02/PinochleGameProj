@@ -5,7 +5,7 @@ public class DoubleDecorator extends MeldDecorator {
 
     @Override
     public int getScore() {
-        int score = decoratedAceRun.getScore();
+        int score = decoratedMeld.getScore();
         // If the hand is an Ace Run.
         if(score == 150){
             score *= 10;
@@ -19,7 +19,7 @@ public class DoubleDecorator extends MeldDecorator {
 
     @Override
     public List<String> getHandToCheck() {
-        List<String> handToCheck = decoratedAceRun.getHandToCheck();
+        List<String> handToCheck = decoratedMeld.getHandToCheck();
         handToCheck.addAll(handToCheck);
         return handToCheck;
     }

@@ -1,19 +1,19 @@
 import java.util.List;
 
 public class MeldDecorator implements MeldInterface {
-    protected MeldInterface decoratedAceRun;
+    protected MeldInterface decoratedMeld;
 
-    public MeldDecorator(MeldInterface decoratedAceRun){
-        this.decoratedAceRun = decoratedAceRun;
+    public MeldDecorator(MeldInterface decoratedMeld){
+        this.decoratedMeld = decoratedMeld;
     }
 
     @Override
     public int getScore() {
-        return decoratedAceRun.getScore();
+        return decoratedMeld.getScore();
     }
 
     @Override
     public List<String> getHandToCheck() {
-        return decoratedAceRun.getHandToCheck();
+        return decoratedMeld.getHandToCheck();
     }
 }
