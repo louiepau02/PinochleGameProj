@@ -15,7 +15,7 @@ public class Pinochle extends CardGame {
             Suit.CLUBS.getSuitShortHand(), "sprites/bigclub.gif",
             Suit.DIAMONDS.getSuitShortHand(), "sprites/bigdiamond.gif",
             Suit.HEARTS.getSuitShortHand(), "sprites/bigheart.gif"));
-    private String trumpSuit = null;
+    static public String trumpSuit = null;
 
     static public final int seed = 30008; // Original is 30008
     static final Random random = new Random(seed);

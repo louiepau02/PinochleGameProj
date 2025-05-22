@@ -9,14 +9,34 @@ import java.util.List;
     In charge of instantiating the different meld hands as Lists.
  */
 public class Meld {
+    // Baic meld
+    MeldInterface base = new BasicMeld();
+    
+    // Ace Run based melds.
+    MeldInterface aceRun = new AceRunDecorator(new BasicMeld());
+    MeldInterface aceRunK = new KingDecorator(new AceRunDecorator(new BasicMeld()));
+    MeldInterface aceRunQ = new QueenDecorator(new AceRunDecorator(new BasicMeld()));
+    MeldInterface aceRunRM = new KingDecorator(new QueenDecorator(new AceRunDecorator(new BasicMeld())));
+    MeldInterface doubleAR = new DoubleDecorator(new AceRunDecorator(new BasicMeld()));
 
+    // Marriage based melds.
+
+    // Pinochle based melds.
+    MeldInterface pinochle = new PinochleDecorator(new BasicMeld());
+    MeldInterface doubleP = new DoubleDecorator(new PinochleDecorator(new BasicMeld()));
+
+
+
+    /*
+        Create Ace Run Concrete object.
+     */
     private List<String> getTenToAceCards() {
         return Arrays.asList(
-                Rank.ACE.getRankCardValue() + trumpSuit,
-                Rank.JACK.getRankCardValue() + trumpSuit,
-                Rank.QUEEN.getRankCardValue() + trumpSuit,
-                Rank.KING.getRankCardValue() + trumpSuit,
-                Rank.TEN.getRankCardValue() + trumpSuit);
+                Rank.ACE.getRankCardValue() + Pinochle.trumpSuit,
+                Rank.JACK.getRankCardValue() + Pinochle.trumpSuit,
+                Rank.QUEEN.getRankCardValue() + Pinochle.trumpSuit,
+                Rank.KING.getRankCardValue() + Pinochle.trumpSuit,
+                Rank.TEN.getRankCardValue() + Pinochle.trumpSuit);
     }
 
     private List<String> checkTenToAceRun(List<Card> list) {
@@ -29,7 +49,7 @@ public class Meld {
 
     private List<String> checkAceRunExtraKing(List<Card> list) {
         List<String> cardsToCheck = new ArrayList<>(getTenToAceCards());
-        cardsToCheck.add(Rank.KING.getRankCardValue() + trumpSuit);
+        cardsToCheck.add(Rank.KING.getRankCardValue() + Pinochle.trumpSuit);
         if (checkCardInList(list, cardsToCheck)) {
             return cardsToCheck;
         }
@@ -38,7 +58,7 @@ public class Meld {
 
     private List<String> checkAceRunExtraQueen(List<Card> list) {
         List<String> cardsToCheck = new ArrayList<>(getTenToAceCards());
-        cardsToCheck.add(Rank.QUEEN.getRankCardValue() + trumpSuit);
+        cardsToCheck.add(Rank.QUEEN.getRankCardValue() + Pinochle.trumpSuit);
 
         if (checkCardInList(list, cardsToCheck)) {
             return cardsToCheck;
@@ -48,8 +68,8 @@ public class Meld {
 
     private List<String> checkRoyalMarriage(List<Card> list) {
         List<String> cardsToCheck = Arrays.asList(
-                Rank.QUEEN.getRankCardValue() + trumpSuit,
-                Rank.KING.getRankCardValue() + trumpSuit);
+                Rank.QUEEN.getRankCardValue() + Pinochle.trumpSuit,
+                Rank.KING.getRankCardValue() + Pinochle.trumpSuit);
         if (checkCardInList(list, cardsToCheck)) {
             return cardsToCheck;
         }
