@@ -9,7 +9,7 @@ import java.util.List;
     In charge of instantiating the different meld hands as Lists.
  */
 public class Meld {
-    // Baic meld
+    // Baic meld.
     MeldInterface base = new BasicMeld();
     
     // Ace Run based melds.
@@ -21,9 +21,19 @@ public class Meld {
 
     // Marriage based melds.
 
+
     // Pinochle based melds.
     MeldInterface pinochle = new PinochleDecorator(new BasicMeld());
     MeldInterface doubleP = new DoubleDecorator(new PinochleDecorator(new BasicMeld()));
+
+    // Jacks Abound meld.
+    MeldInterface jacksAbound = new JacksAboundDecorator(new BasicMeld());
+
+    // Aces Around meld.
+    MeldInterface acesAround = new AcesAroundDecorator(new BasicMeld());
+
+    // Dix meld.
+    MeldInterface dix = new DixDecorator(new BasicMeld());
 
 
 
