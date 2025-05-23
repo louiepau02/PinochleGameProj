@@ -1,4 +1,18 @@
-public class Scoring {
+import ch.aplu.jcardgame.*;
+
+import java.util.*;
+import java.util.List;
+
+public class MeldScoringCalculator {
+    public int getScore(ArrayList<Card> cardList){
+        return this.calculateMeldingScore(cardList);
+    }
+
+
+    private int calculateMeldingScore(List<Card> list){
+        return 0;
+    }
+
     /*
     private List<String> checkTenToAceRun(List<Card> list) {
         List<String> cardsToCheck = getTenToAceCards();

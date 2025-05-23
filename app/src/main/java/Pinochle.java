@@ -858,8 +858,10 @@ public class Pinochle extends CardGame {
     private void playGame() {
         askForBid();
         askForTrumpCard();
+        MeldScoringCalculator calculator = new MeldScoringCalculator();
         for (int i = 0; i < nbPlayers; i++) {
-            scores[i] = calculateMeldingScore(hands[i].getCardList());
+            //or just call newScoringCalculator here
+            scores[i] = calculator.getScore(hands[i].getCardList());
             updateScore(i);
             delay(delayTime);
         }
