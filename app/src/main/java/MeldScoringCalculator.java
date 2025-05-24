@@ -4,52 +4,81 @@ import java.util.*;
 import java.util.List;
 
 public class MeldScoringCalculator {
-    public int getScore(ArrayList<Card> cardList){
+    private final List<MeldDecorator> meldsToCheck;
+    public MeldScoringCalculator() {
+        // grab the pre-built, priority-ordered decorator chains
+        this.meldsToCheck = Meld.getInstance().getMelds();
+    }
+
+    public int calculateScore(ArrayList<Card> cardList){
         return this.calculateMeldingScore(cardList);
     }
 
-
-    private int calculateMeldingScore(List<Card> list){
-        return 0;
-    }
-
     /*
-    private List<String> checkTenToAceRun(List<Card> list) {
-        List<String> cardsToCheck = getTenToAceCards();
-        if (checkCardInList(list, cardsToCheck)) {
-            return cardsToCheck;
+       calculate the player's score based off their cards in hand
+       by comparing
+    */
+    private int calculateMeldingScore(List<Card> list){
+        int totalScore = 0;
+
+        //testing - print statement
+        System.out.println("Starting meld scoring calculation...");
+        System.out.println("Initial hand cards: ");
+        for (Card c : list) {
+            System.out.print(getCardName(c) + " ");
         }
-        return null;
+        System.out.println("\nChecking melds:");
+
+        for(MeldDecorator meld : meldsToCheck){
+            List<String> cardsToRemove = meld.getHandToCheck();
+
+            //testing - print statement
+            System.out.println("Checking meld: " + meld.getClass().getSimpleName());
+            //testing - print statement
+            System.out.println("Meld requires cards: " + cardsToRemove);
+            //for each meld we call getHandToCheck to create the list(using card_to_remove logic)
+            boolean hasMeld = checkCardInMeld(list, cardsToRemove);
+            //testing - print statement
+            System.out.println("Meld present in hand? " + hasMeld);
+
+            //actual code
+            if(checkCardInMeld(list, cardsToRemove)){
+                System.out.println("found the meld");
+                totalScore = meld.getScore();
+                removeCardsFromHand(list, cardsToRemove);
+            }
+        }
+
+        return totalScore;
     }
 
-
-    private int calculateMeldingScore(List<Card> list) {
-        int score = 0;
-        List<String> cardsToRemove = checkAceRunExtraKing(list);
-        if (cardsToRemove != null) {
-            score += 190;
-            list = removeCardFromList(list, cardsToRemove);
+    private boolean checkCardInMeld(List<Card> cardInHand, List<String> cardsToCheck) {
+        ArrayList<String> cardsToRemove = new ArrayList<>(cardsToCheck);
+        for (Card card : cardInHand) {
+            String cardName = getCardName(card);
+            cardsToRemove.remove(cardName);
         }
-        cardsToRemove = checkAceRunExtraQueen(list);
-        if (cardsToRemove != null) {
-            score += 190;
-            list = removeCardFromList(list, cardsToRemove);
-        }
-
-        cardsToRemove = checkTenToAceRun(list);
-        if (cardsToRemove != null) {
-            score += 150;
-            list = removeCardFromList(list, cardsToRemove);
-        }
-
-        cardsToRemove = checkRoyalMarriage(list);
-        if (cardsToRemove != null) {
-            score += 40;
-            list = removeCardFromList(list, cardsToRemove);
-        }
-        return score;
+        return cardsToRemove.isEmpty();
     }
 
- */
+    private String getCardName(Card card) {
+        Suit suit = (Suit) card.getSuit();
+        Rank rank = (Rank) card.getRank();
+        return rank.getRankCardValue() + suit.getSuitShortHand();
+    }
+
+    private List<Card> removeCardsFromHand(List<Card> hand, List<String> cardsToRemove){
+        List<Card> newCardList = new ArrayList<>();
+        List<String> newCardsToRemove = new ArrayList<>(cardsToRemove);
+        for (Card card : hand) {
+            String cardName = getCardName(card);
+            if (newCardsToRemove.contains(cardName)) {
+                newCardsToRemove.remove(cardName);
+            } else {
+                newCardList.add(card);
+            }
+        }
+        return newCardList;
+    }
 
 }

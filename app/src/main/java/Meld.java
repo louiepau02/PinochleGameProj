@@ -10,7 +10,7 @@ import java.util.List;
  */
 public final class Meld {
     private static Meld instance;
-    public List<MeldDecorator> melds;
+    public List<MeldDecorator> melds = new ArrayList<>();;
 
     private Meld() {
         populateMeld();

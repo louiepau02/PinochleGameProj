@@ -861,7 +861,9 @@ public class Pinochle extends CardGame {
         MeldScoringCalculator calculator = new MeldScoringCalculator();
         for (int i = 0; i < nbPlayers; i++) {
             //or just call newScoringCalculator here
-            scores[i] = calculator.getScore(hands[i].getCardList());
+            scores[i] = calculator.calculateScore(hands[i].getCardList());
+            System.out.println("checking player" + i + "score" + scores[i]);
+            System.out.println();
             updateScore(i);
             delay(delayTime);
         }
