@@ -87,10 +87,12 @@ public final class Meld {
         ));
 
         // add in the meld hands for common marriage
-        for (Suit suit: Suit.values()){
+        // repeating shorthands so make an array
+        List<Suit> mainSuits = Arrays.asList(Suit.SPADES, Suit.DIAMONDS, Suit.HEARTS, Suit.CLUBS);
+        for (Suit suit: mainSuits){
             String currSuit = suit.getSuitShortHand();
             if (!currSuit.equals(Pinochle.trumpSuit)){
-                this.melds.add(new KingDecorator(new QueenDecorator(new BasicMeld()), currSuit));
+                this.melds.add(new KingDecorator(new QueenDecorator(new BasicMeld(), currSuit), currSuit));
             }
         }
     }
