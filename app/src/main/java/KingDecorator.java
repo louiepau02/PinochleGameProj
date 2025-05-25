@@ -1,7 +1,17 @@
 import java.util.List;
 
 public class KingDecorator extends MeldDecorator {
-    public KingDecorator(MeldInterface decoratedMeld) {super(decoratedMeld);}
+    private String kingSuit;
+
+    public KingDecorator(MeldInterface decoratedMeld) {
+        super(decoratedMeld);
+        kingSuit = Pinochle.trumpSuit;
+    }
+
+    public KingDecorator(MeldInterface decoratedMeld, String suit){
+        super(decoratedMeld);
+        kingSuit = suit;
+    }
 
     @Override
     public int getScore() {
@@ -18,9 +28,11 @@ public class KingDecorator extends MeldDecorator {
     @Override
     public List<String> getHandToCheck() {
         List<String> handToCheck = decoratedMeld.getHandToCheck();
-        handToCheck.add((Rank.KING.getRankCardValue() + Pinochle.trumpSuit));
+        handToCheck.add((Rank.KING.getRankCardValue() + kingSuit));
+        System.out.println("KING DECORATOR, SUIT" + kingSuit);
 
         return handToCheck;
     }
+
 }
 

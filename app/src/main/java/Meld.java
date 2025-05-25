@@ -8,7 +8,7 @@ import java.util.List;
  */
 public final class Meld {
     private static Meld instance;
-    public List<MeldDecorator> melds = new ArrayList<>();;
+    public List<MeldDecorator> melds = new ArrayList<>();
 
     private Meld() {
         populateMeld();
@@ -37,6 +37,33 @@ public final class Meld {
         // Marriage based melds.
         MeldDecorator RM = new KingDecorator(new QueenDecorator(new BasicMeld()));
 
+        // initialise all possible melds for CM
+//        MeldDecorator heartCM = new MeldDecorator(new BasicMeld());
+//        MeldDecorator spadeCM = new MeldDecorator(new BasicMeld());
+//        MeldDecorator clubsCM = new MeldDecorator(new BasicMeld());
+//        MeldDecorator diamondCM = new MeldDecorator(new BasicMeld());
+//
+//        for (Suit suit: Suit.values()){
+//            if (suit.getSuitShortHand()!=Pinochle.trumpSuit){
+//                String cardSuit = suit.getSuitShortHand();
+//                switch (cardSuit) {
+//                    case "H":
+//                        heartCM = new KingDecorator(new QueenDecorator(new BasicMeld(Suit.HEARTS)));
+//                        break;
+//                    case "S":
+//                        spadeCM = new KingDecorator(new QueenDecorator(new BasicMeld(Suit.SPADES)));
+//                        break;
+//                    case "C":
+//                        clubsCM = new KingDecorator(new QueenDecorator(new BasicMeld(Suit.CLUBS)));
+//                        break;
+//                    case "D":
+//                        diamondCM = new KingDecorator(new QueenDecorator(new BasicMeld(Suit.DIAMONDS)));
+//                        break;
+//                }
+//            }
+//        }
+
+
         // Pinochle based melds.
         MeldDecorator pinochle = new PinochleDecorator(new BasicMeld());
         MeldDecorator doubleP = new DoubleDecorator(new PinochleDecorator(new BasicMeld()));
@@ -58,6 +85,14 @@ public final class Meld {
                 RM, pinochle, dix
                 /*common marriage*/
         ));
+
+        // add in the meld hands for common marriage
+        for (Suit suit: Suit.values()){
+            String currSuit = suit.getSuitShortHand();
+            if (!currSuit.equals(Pinochle.trumpSuit)){
+                this.melds.add(new KingDecorator(new QueenDecorator(new BasicMeld()), currSuit));
+            }
+        }
     }
 
     public List<MeldDecorator> getMelds() {
