@@ -1,5 +1,3 @@
-import ch.aplu.jcardgame.Card;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -37,7 +35,7 @@ public final class Meld {
         MeldDecorator doubleAR = new DoubleDecorator(new AceRunDecorator(new BasicMeld()));
 
         // Marriage based melds.
-
+        MeldDecorator RM = new KingDecorator(new QueenDecorator(new BasicMeld()));
 
         // Pinochle based melds.
         MeldDecorator pinochle = new PinochleDecorator(new BasicMeld());
@@ -56,8 +54,9 @@ public final class Meld {
         // Add melds to list in the correct order based on score in decreasing order.
         assert melds != null;
         this.melds.addAll(Arrays.asList(
-                doubleAR, jacksAbound, doubleP, aceRunRM, aceRunK, aceRunQ, aceRun, acesAround
-                /*Missing Royal marriage, pinochle, common marriage, dix.*/
+                doubleAR, jacksAbound, doubleP, aceRunRM, aceRunK, aceRunQ, aceRun, acesAround,
+                RM, pinochle, dix
+                /*common marriage*/
         ));
     }
 

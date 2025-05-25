@@ -1,10 +1,9 @@
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 /*
     Concrete class for the Ace Run meld.
  */
-public class BasicMeld implements MeldInterface{
+public class BasicMeld implements MeldInterface {
     private final List<String> handToCheck;
     private final int score;
 
@@ -20,6 +19,6 @@ public class BasicMeld implements MeldInterface{
 
     @Override
     public List<String> getHandToCheck() {
-        return handToCheck;
+        return new ArrayList<>();
     }
 }

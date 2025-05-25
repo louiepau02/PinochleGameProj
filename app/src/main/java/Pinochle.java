@@ -1,5 +1,4 @@
 
-
 import ch.aplu.jcardgame.*;
 import ch.aplu.jgamegrid.*;
 
@@ -858,9 +857,9 @@ public class Pinochle extends CardGame {
     private void playGame() {
         askForBid();
         askForTrumpCard();
-        MeldScoringCalculator calculator = new MeldScoringCalculator();
         for (int i = 0; i < nbPlayers; i++) {
             //or just call newScoringCalculator here
+            MeldScoringCalculator calculator = new MeldScoringCalculator();
             scores[i] = calculator.calculateScore(hands[i].getCardList());
             System.out.println("checking player" + i + "score" + scores[i]);
             System.out.println();

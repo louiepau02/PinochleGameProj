@@ -6,7 +6,12 @@ public class QueenDecorator extends MeldDecorator {
     @Override
     public int getScore() {
         int score = decoratedMeld.getScore();
-        score += 40;
+        if(score==190){
+            score += 40;
+        }
+        if(score==0){
+            score += 20;
+        }
         return score;
     }
 

@@ -22,12 +22,11 @@ public class MeldScoringCalculator {
         int totalScore = 0;
 
         //testing - print statement
-        System.out.println("Starting meld scoring calculation...");
         System.out.println("Initial hand cards: ");
         for (Card c : list) {
             System.out.print(getCardName(c) + " ");
         }
-        System.out.println("\nChecking melds:");
+        System.out.println(" ");
 
         for(MeldDecorator meld : meldsToCheck){
             List<String> cardsToRemove = meld.getHandToCheck();
@@ -37,15 +36,12 @@ public class MeldScoringCalculator {
             //testing - print statement
             System.out.println("Meld requires cards: " + cardsToRemove);
             //for each meld we call getHandToCheck to create the list(using card_to_remove logic)
-            boolean hasMeld = checkCardInMeld(list, cardsToRemove);
-            //testing - print statement
-            System.out.println("Meld present in hand? " + hasMeld);
 
             //actual code
             if(checkCardInMeld(list, cardsToRemove)){
-                System.out.println("found the meld");
-                totalScore = meld.getScore();
-                removeCardsFromHand(list, cardsToRemove);
+                System.out.println("score to be added" + meld.getScore());
+                totalScore += meld.getScore();
+                list = removeCardsFromHand(list, cardsToRemove);
             }
         }
 

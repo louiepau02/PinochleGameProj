@@ -1,4 +1,3 @@
-import java.util.ArrayList;
 import java.util.List;
 
 public class KingDecorator extends MeldDecorator {
@@ -7,7 +6,12 @@ public class KingDecorator extends MeldDecorator {
     @Override
     public int getScore() {
         int score = decoratedMeld.getScore();
-        score += 40;
+        if(score==190){
+            score += 40;
+        }
+        if(score==20){
+            score += 20;
+        }
         return score;
     }
 
