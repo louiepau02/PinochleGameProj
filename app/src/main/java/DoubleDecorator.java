@@ -6,6 +6,7 @@ public class DoubleDecorator extends MeldDecorator {
     @Override
     public int getScore() {
         int score = decoratedMeld.getScore();
+        System.out.println("the starting score rn for double dec is " + score);
         // If the hand is an Ace Run.
         if(score == 150){
             score *= 10;

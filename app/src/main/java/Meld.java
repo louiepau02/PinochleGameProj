@@ -37,32 +37,6 @@ public final class Meld {
         // Marriage based melds.
         MeldDecorator RM = new KingDecorator(new QueenDecorator(new BasicMeld()));
 
-        // initialise all possible melds for CM
-//        MeldDecorator heartCM = new MeldDecorator(new BasicMeld());
-//        MeldDecorator spadeCM = new MeldDecorator(new BasicMeld());
-//        MeldDecorator clubsCM = new MeldDecorator(new BasicMeld());
-//        MeldDecorator diamondCM = new MeldDecorator(new BasicMeld());
-//
-//        for (Suit suit: Suit.values()){
-//            if (suit.getSuitShortHand()!=Pinochle.trumpSuit){
-//                String cardSuit = suit.getSuitShortHand();
-//                switch (cardSuit) {
-//                    case "H":
-//                        heartCM = new KingDecorator(new QueenDecorator(new BasicMeld(Suit.HEARTS)));
-//                        break;
-//                    case "S":
-//                        spadeCM = new KingDecorator(new QueenDecorator(new BasicMeld(Suit.SPADES)));
-//                        break;
-//                    case "C":
-//                        clubsCM = new KingDecorator(new QueenDecorator(new BasicMeld(Suit.CLUBS)));
-//                        break;
-//                    case "D":
-//                        diamondCM = new KingDecorator(new QueenDecorator(new BasicMeld(Suit.DIAMONDS)));
-//                        break;
-//                }
-//            }
-//        }
-
 
         // Pinochle based melds.
         MeldDecorator pinochle = new PinochleDecorator(new BasicMeld());

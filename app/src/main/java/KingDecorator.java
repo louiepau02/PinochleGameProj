@@ -16,11 +16,18 @@ public class KingDecorator extends MeldDecorator {
     @Override
     public int getScore() {
         int score = decoratedMeld.getScore();
-        if(score==190){
-            score += 40;
+        if(kingSuit.equals(Pinochle.trumpSuit)){
+            if ((score==150)||(score==190)) {
+                // for AR + K or AR + RM
+                score += 40;
+            } else {
+                // for RM
+                score += 20;
+            }
         }
-        if(score==20){
-            score += 20;
+        else{
+            // half of common marriage score
+            score += 10;
         }
         return score;
     }
@@ -29,7 +36,7 @@ public class KingDecorator extends MeldDecorator {
     public List<String> getHandToCheck() {
         List<String> handToCheck = decoratedMeld.getHandToCheck();
         handToCheck.add((Rank.KING.getRankCardValue() + kingSuit));
-        System.out.println("KING DECORATOR, SUIT" + kingSuit);
+        // System.out.println("KING DECORATOR, SUIT" + kingSuit);
 
         return handToCheck;
     }

@@ -16,11 +16,19 @@ public class QueenDecorator extends MeldDecorator {
     @Override
     public int getScore() {
         int score = decoratedMeld.getScore();
-        if(score==190){
-            score += 40;
+        if (queenSuit.equals(Pinochle.trumpSuit)){
+            if (score==150) {
+                // for AR + Q or AR + RM
+                score += 40;
+            }
+            else {
+                // for RM score
+                score += 20;
+            }
         }
-        if(score==0){
-            score += 20;
+        else{
+            //for common marriage score
+            score += 10;
         }
         return score;
     }
