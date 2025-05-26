@@ -488,20 +488,61 @@ public class Pinochle extends CardGame {
         bidPassActor.setActEnabled(isShown);
     }
 
-    private void askForBidForPlayerIndex(int playerIndex) {
+    private void askForBidForPlayerIndex(int playerIndex, boolean isFirst) {
+        int plannedIncrease = 0;
+        ArrayList<Card> hand = hands[playerIndex].getCardList();
+        Map<String, Integer> suitCount = new HashMap<>(); // dictionary
+        boolean moreThanSix = false;
 
         if (playerIndex == COMPUTER_PLAYER_INDEX) {
-            int bidValue;
+            if (isFirst){
+                // Computer has first bid
+                // Opening bid will be equal to the total meld score of its hand.
+            }
+
+            int bidValue = 0;
             if (isAuto && computerAutoBids != null && computerAutoBidIndex < computerAutoBids.size()) {
                 bidValue = computerAutoBids.get(computerAutoBidIndex);
                 computerAutoBidIndex++;
             } else {
-                Random random = new Random();
-                int randomBidBase = random.nextInt(3);
-                bidValue = randomBidBase * 10;
+
+                // Populate the dictionary -> access to hand
+                for (Card card : hand){
+                    String suit = card.getSuit().toString();
+                    // Merge normal suits and xxTWO into a single key
+                    if (suit.contains("TWO")) {
+                        // it contains TWO
+                        suit = suit.replace("TWO", "");
+                    }
+
+                    if (suitCount.containsKey(suit)){
+                        suitCount.put(suit, suitCount.get(suit) + 1);
+                    } else {
+                        suitCount.put(suit, 1);
+                    }
+                }
+
+                for (Map.Entry<String, Integer> entry : suitCount.entrySet()){
+                    if (entry.getValue() >= 6) { // If hand has 6 or more cards in the same suit
+                        // Raise the bid by 20
+                        bidValue += 20;
+                        moreThanSix = true;
+                    }
+                }
+
+                if(!moreThanSix){
+                    // Raise by 10
+                    bidValue += 10;
+                }
+
+                int bidThreshold = bidThreshold(suitCount, hand, playerIndex);
+
+                if ((currentBid + bidValue) < bidThreshold){
+                    updateBidText(playerIndex, currentBid + bidValue);
+                }
             }
 
-            updateBidText(playerIndex, currentBid + bidValue);
+
 
             delay(thinkingTime);
             if (bidValue == 0) {
@@ -532,12 +573,37 @@ public class Pinochle extends CardGame {
         }
     }
 
+    /*
+        Return the maximum between:
+        The total card value of the majority suit (the suit that has the most cards), or
+        The total card value of the suit that contains the most Aces, 10s, and Kings.
+     */
+    private int bidThreshold(Map<String, Integer> suitCount, ArrayList<Card> hand, int playerIndex){
+
+        int maxSuitValue = Collections.max(suitCount.values());
+
+
+        int largestNum = 0;
+        for (String key : suitCount.keySet()) { // diamonds, hearts, spades, club
+            int tempcount = 0;
+
+            for (Card card : hand){
+                if (card.getRank()== Rank.ACE){tempcount += 11;} // Aces
+                if (card.getRank()== Rank.TEN){tempcount += 10;} // 10s
+                if (card.getRank()== Rank.KING){tempcount += 4;} // Kings
+                if (tempcount > largestNum){largestNum = tempcount;}
+            }
+        }
+
+        return (Math.max(maxSuitValue, largestNum) + scores[playerIndex]); // need to find this;
+    }
+
     private void askForBid() {
         initBids();
         displayBidButtons(false);
-        String bidOrder = properties.getProperty("players.bid_first", "random");
-        String player0Bids = properties.getProperty("players.0.bids", "");
-        String player1Bids = properties.getProperty("players.1.bids", "");
+        String bidOrder = properties.getProperty("players.bid_first", "random"); //human
+        String player0Bids = properties.getProperty("players.0.bids", ""); //10,20,10,20,0
+        String player1Bids = properties.getProperty("players.1.bids", ""); // 0,20,10,20,0
 
         if (player0Bids != null) {
             if (!player0Bids.isEmpty()) {
@@ -563,9 +629,12 @@ public class Pinochle extends CardGame {
             default -> COMPUTER_PLAYER_INDEX;
         };
 
+        // flag
+        boolean isFirst = true;
         do {
             for (int i = 0; i < nbPlayers; i++) {
-                askForBidForPlayerIndex(playerIndex);
+                askForBidForPlayerIndex(playerIndex, isFirst);
+                isFirst = false;
                 playerIndex = (playerIndex + 1) % nbPlayers;
                 isContinueBidding = !hasHumanPassed && !hasComputerPassed;
                 if (!isContinueBidding) {
