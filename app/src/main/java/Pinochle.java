@@ -48,6 +48,7 @@ public class Pinochle extends CardGame {
      * Bidding elements
      */
 
+    //GUI related
     private final GGButton bidSelectionActor = new GGButton("sprites/bid_10.gif", false);
     private final GGButton bidConfirmActor = new GGButton("sprites/done30.gif", false);
     private final GGButton bidPassActor = new GGButton("sprites/bid_pass.gif", false);
@@ -62,23 +63,9 @@ public class Pinochle extends CardGame {
     private final Location currentBidLocation = new Location(550, 50);
     private final Location newBidLocation = new Location(550, 75);
 
-    private boolean hasHumanBid = false;
-    private int humanBid = 0;
-    private final int BID_SELECTION_VALUE = 10;
-    private final int MAX_SINGLE_BID = 20;
     private final int COMPUTER_PLAYER_INDEX = 0;
     private final int HUMAN_PLAYER_INDEX = 1;
-    private boolean hasComputerPassed = false;
-    private boolean hasHumanPassed = false;
     private int bidWinPlayerIndex = 0;
-    private final List<Integer> computerAutoBids = new ArrayList<>();
-    private final List<Integer> humanAutoBids = new ArrayList<>();
-    private int computerAutoBidIndex = 0;
-    private int humanAutoBidIndex = 0;
-
-    public static final String RANDOM_BID = "random";
-    public static final String COMPUTER_BID = "computer";
-    public static final String HUMAN_BID = "human";
 
     /**
      * Trump Elements
@@ -106,8 +93,12 @@ public class Pinochle extends CardGame {
 
     private final Location playingLocation = new Location(350, 350);
     private final Location textLocation = new Location(350, 450);
+
+
     private int thinkingTime = 2000;
+
     private int delayTime = 600;
+
     private Hand[] hands;
     private Hand[] trickWinningHands;
 
@@ -359,295 +350,6 @@ public class Pinochle extends CardGame {
      * Bid Section
      */
 
-    private void initBids() {
-        addActor(bidSelectionActor, bidSelectionLocation);
-        addActor(bidConfirmActor, bidConfirmLocation);
-        addActor(bidPassActor, bidPassLocation);
-
-        addActor(playerBidActor, playerBidLocation);
-        addActor(currentBidActor, currentBidLocation);
-        addActor(newBidActor, newBidLocation);
-
-        setActorOnTop(bidSelectionActor);
-        setActorOnTop(bidConfirmActor);
-        setActorOnTop(bidPassActor);
-
-        bidSelectionActor.setActEnabled(false);
-        bidConfirmActor.setActEnabled(false);
-        bidPassActor.setActEnabled(false);
-
-        hasComputerPassed = false;
-
-        System.out.println("init bids");
-        bidSelectionActor.addButtonListener(new GGButtonListener() {
-            @Override
-            public void buttonPressed(GGButton ggButton) {
-                hasHumanBid = false;
-
-                if (humanBid >= MAX_SINGLE_BID) {
-                    bidSelectionActor.setActEnabled(false);
-                    setStatus("Maximum amount of a single bid reached");
-                } else {
-                    humanBid += BID_SELECTION_VALUE;
-                }
-                updateBidText(HUMAN_PLAYER_INDEX, humanBid + currentBid);
-            }
-
-            @Override
-            public void buttonReleased(GGButton ggButton) {
-            }
-
-            @Override
-            public void buttonClicked(GGButton ggButton) {
-            }
-        });
-
-        bidConfirmActor.addButtonListener(new GGButtonListener() {
-            @Override
-            public void buttonPressed(GGButton ggButton) {
-                currentBid = currentBid + humanBid;
-                hasHumanBid = true;
-                humanBid = 0;
-                updateBidText(HUMAN_PLAYER_INDEX, currentBid);
-                setStatus("");
-            }
-
-            @Override
-            public void buttonReleased(GGButton ggButton) {
-            }
-
-            @Override
-            public void buttonClicked(GGButton ggButton) {
-            }
-        });
-
-        bidPassActor.addButtonListener(new GGButtonListener() {
-            @Override
-            public void buttonPressed(GGButton ggButton) {
-                updateBidText(HUMAN_PLAYER_INDEX, 0);
-                humanBid = 0;
-                hasHumanPassed = true;
-                setStatus("");
-            }
-
-            @Override
-            public void buttonReleased(GGButton ggButton) {
-            }
-
-            @Override
-            public void buttonClicked(GGButton ggButton) {
-            }
-        });
-    }
-
-    private void removeBids() {
-        removeActor(bidSelectionActor);
-        removeActor(bidConfirmActor);
-        removeActor(bidPassActor);
-
-        removeActor(newBidActor);
-    }
-
-    private void removeBidText() {
-        removeActor(currentBidActor);
-        removeActor(newBidActor);
-        removeActor(playerBidActor);
-    }
-
-    private void updateBidText(int playerIndex, int newBid) {
-        String playerBidString = "";
-        switch (playerIndex) {
-            case -1:
-                playerBidString = "Bid";
-                break;
-            case 0:
-                playerBidString = "Computer Bid";
-                break;
-            case 1:
-                playerBidString = "Human Bid";
-                break;
-        }
-
-        removeBidText();
-        currentBidActor = new TextActor("Current Bid: " + currentBid, Color.WHITE, bgColor, smallFont);
-        addActor(currentBidActor, currentBidLocation);
-
-        String newBidString = newBid == 0 ? "" : String.valueOf(newBid);
-        newBidActor = new TextActor("New Bid: " + newBidString, Color.WHITE, bgColor, smallFont);
-        addActor(newBidActor, newBidLocation);
-
-        playerBidActor = new TextActor(playerBidString, Color.WHITE, bgColor, smallFont);
-        addActor(playerBidActor, playerBidLocation);
-
-        delay(delayTime);
-    }
-
-    private void displayBidButtons(boolean isShown) {
-        bidSelectionActor.setActEnabled(isShown);
-        bidConfirmActor.setActEnabled(isShown);
-        bidPassActor.setActEnabled(isShown);
-    }
-
-    private void askForBidForPlayerIndex(int playerIndex, boolean isFirst) {
-        int plannedIncrease = 0;
-        ArrayList<Card> hand = hands[playerIndex].getCardList();
-        Map<String, Integer> suitCount = new HashMap<>(); // dictionary
-        boolean moreThanSix = false;
-
-        if (playerIndex == COMPUTER_PLAYER_INDEX) {
-            if (isFirst){
-                // Computer has first bid
-                // Opening bid will be equal to the total meld score of its hand.
-            }
-
-            int bidValue = 0;
-            if (isAuto && computerAutoBids != null && computerAutoBidIndex < computerAutoBids.size()) {
-                bidValue = computerAutoBids.get(computerAutoBidIndex);
-                computerAutoBidIndex++;
-            } else {
-
-                // Populate the dictionary -> access to hand
-                for (Card card : hand){
-                    String suit = card.getSuit().toString();
-                    // Merge normal suits and xxTWO into a single key
-                    if (suit.contains("TWO")) {
-                        // it contains TWO
-                        suit = suit.replace("TWO", "");
-                    }
-
-                    if (suitCount.containsKey(suit)){
-                        suitCount.put(suit, suitCount.get(suit) + 1);
-                    } else {
-                        suitCount.put(suit, 1);
-                    }
-                }
-
-                for (Map.Entry<String, Integer> entry : suitCount.entrySet()){
-                    if (entry.getValue() >= 6) { // If hand has 6 or more cards in the same suit
-                        // Raise the bid by 20
-                        bidValue += 20;
-                        moreThanSix = true;
-                    }
-                }
-
-                if(!moreThanSix){
-                    // Raise by 10
-                    bidValue += 10;
-                }
-
-                int bidThreshold = bidThreshold(suitCount, hand, playerIndex);
-
-                if ((currentBid + bidValue) < bidThreshold){
-                    updateBidText(playerIndex, currentBid + bidValue);
-                }
-            }
-
-
-
-            delay(thinkingTime);
-            if (bidValue == 0) {
-                hasComputerPassed = true;
-                hasHumanBid = false;
-
-                return;
-            }
-
-            currentBid += bidValue;
-            updateBidText(playerIndex, 0);
-            hasHumanBid = false;
-        } else {
-            displayBidButtons(true);
-            updateBidText(playerIndex, 0);
-            if (isAuto && humanAutoBids != null && humanAutoBidIndex < humanAutoBids.size()) {
-                humanBid = humanAutoBids.get(humanAutoBidIndex);
-                currentBid = currentBid + humanBid;
-                humanAutoBidIndex++;
-                if (humanBid == 0) {
-                    hasHumanPassed = true;
-                }
-                updateBidText(HUMAN_PLAYER_INDEX, currentBid);
-            } else {
-                while (!hasHumanBid && !hasHumanPassed) delay(delayTime);
-            }
-            hasHumanBid = true;
-        }
-    }
-
-    /*
-        Return the maximum between:
-        The total card value of the majority suit (the suit that has the most cards), or
-        The total card value of the suit that contains the most Aces, 10s, and Kings.
-     */
-    private int bidThreshold(Map<String, Integer> suitCount, ArrayList<Card> hand, int playerIndex){
-
-        int maxSuitValue = Collections.max(suitCount.values());
-
-
-        int largestNum = 0;
-        for (String key : suitCount.keySet()) { // diamonds, hearts, spades, club
-            int tempcount = 0;
-
-            for (Card card : hand){
-                if (card.getRank()== Rank.ACE){tempcount += 11;} // Aces
-                if (card.getRank()== Rank.TEN){tempcount += 10;} // 10s
-                if (card.getRank()== Rank.KING){tempcount += 4;} // Kings
-                if (tempcount > largestNum){largestNum = tempcount;}
-            }
-        }
-
-        return (Math.max(maxSuitValue, largestNum) + scores[playerIndex]); // need to find this;
-    }
-
-    private void askForBid() {
-        initBids();
-        displayBidButtons(false);
-        String bidOrder = properties.getProperty("players.bid_first", "random"); //human
-        String player0Bids = properties.getProperty("players.0.bids", ""); //10,20,10,20,0
-        String player1Bids = properties.getProperty("players.1.bids", ""); // 0,20,10,20,0
-
-        if (player0Bids != null) {
-            if (!player0Bids.isEmpty()) {
-                List<String> bidStrings = Arrays.asList(player0Bids.split(","));
-                computerAutoBids.addAll(bidStrings.stream().map(Integer::parseInt).toList());
-            }
-        }
-
-        if (player1Bids != null) {
-            if (!player1Bids.isEmpty()) {
-                List<String> bidStrings = Arrays.asList(player1Bids.split(","));
-                humanAutoBids.addAll(bidStrings.stream().map(Integer::parseInt).toList());
-            }
-        }
-
-        boolean isContinueBidding = true;
-        updateBidText(-1, 0);
-        Random rand = new Random(1);
-        int playerIndex = switch (bidOrder) {
-            case RANDOM_BID -> rand.nextInt(nbPlayers);
-            case COMPUTER_BID -> COMPUTER_PLAYER_INDEX;
-            case HUMAN_BID -> HUMAN_PLAYER_INDEX;
-            default -> COMPUTER_PLAYER_INDEX;
-        };
-
-        // flag
-        boolean isFirst = true;
-        do {
-            for (int i = 0; i < nbPlayers; i++) {
-                askForBidForPlayerIndex(playerIndex, isFirst);
-                isFirst = false;
-                playerIndex = (playerIndex + 1) % nbPlayers;
-                isContinueBidding = !hasHumanPassed && !hasComputerPassed;
-                if (!isContinueBidding) {
-                    bidWinPlayerIndex = playerIndex;
-                    break;
-                }
-            }
-        } while (isContinueBidding);
-
-        removeBids();
-        updateBidResult();
-        addBidInfoToLog();
-    }
 
     private void updateTrumpActor() {
         String trumpImage = trumpImages.get(trumpSuit);
@@ -709,17 +411,6 @@ public class Pinochle extends CardGame {
         updateTrumpActor();
     }
 
-    private void updateBidResult() {
-        removeActor(playerBidActor);
-        removeActor(currentBidActor);
-
-        currentBidActor = new TextActor("Current Bid: " + currentBid, Color.WHITE, bgColor, smallFont);
-        addActor(currentBidActor, currentBidLocation);
-
-        String playerBidString = bidWinPlayerIndex == COMPUTER_PLAYER_INDEX ? "Computer Win" : "Human Win";
-        playerBidActor = new TextActor(playerBidString, Color.WHITE, bgColor, smallFont);
-        addActor(playerBidActor, playerBidLocation);
-    }
 
     /**
      * Logging Logic
@@ -737,7 +428,7 @@ public class Pinochle extends CardGame {
         logResult.append(",");
     }
 
-    private void addBidInfoToLog() {
+    public void addBidInfoToLog() {
         logResult.append("Bid:" + bidWinPlayerIndex + "-" + currentBid + "\n");
     }
 
@@ -924,7 +615,9 @@ public class Pinochle extends CardGame {
     }
 
     private void playGame() {
-        askForBid();
+        //call the controller then the function
+        BidController bidController = new BidController(this, properties, currentBid, nbPlayers);
+        bidController.askForBid();
         askForTrumpCard();
         for (int i = 0; i < nbPlayers; i++) {
             //or just call newScoringCalculator here
@@ -1062,6 +755,91 @@ public class Pinochle extends CardGame {
         isAuto = Boolean.parseBoolean(properties.getProperty("isAuto"));
         thinkingTime = Integer.parseInt(properties.getProperty("thinkingTime", "200"));
         delayTime = Integer.parseInt(properties.getProperty("delayTime", "50"));
+    }
+
+    //Getter methods
+    public GGButton getBidSelectionActor() {
+        return bidSelectionActor;
+    }
+
+    public GGButton getBidConfirmActor() {
+        return bidConfirmActor;
+    }
+
+    public GGButton getBidPassActor() {
+        return bidPassActor;
+    }
+
+    public TextActor getPlayerBidActor() {
+        return playerBidActor;
+    }
+
+    public TextActor getCurrentBidActor() {
+        return currentBidActor;
+    }
+
+    public TextActor getNewBidActor() {
+        return newBidActor;
+    }
+
+    public Location getBidSelectionLocation() {
+        return bidSelectionLocation;
+    }
+
+    public Location getBidConfirmLocation() {
+        return bidConfirmLocation;
+    }
+
+    public Location getBidPassLocation() {
+        return bidPassLocation;
+    }
+
+    public Location getPlayerBidLocation() {
+        return playerBidLocation;
+    }
+
+    public Location getCurrentBidLocation() {
+        return currentBidLocation;
+    }
+
+    public Location getNewBidLocation() {
+        return newBidLocation;
+    }
+
+    public Color getBGcolor(){
+        return bgColor;
+    }
+
+    public Font getSmallFont() {
+        return smallFont;
+    }
+
+    public int getDelayTime() {
+        return delayTime;
+    }
+
+    public void setCurrentBidActor(TextActor textActor) {
+        currentBidActor = textActor;
+    }
+
+    public void setNewBidActor(TextActor textActor) {
+        newBidActor = textActor;
+    }
+
+    public void setPlayerBidActor(TextActor textActor) {
+        playerBidActor = textActor;
+    }
+
+    public ArrayList getHands(int playerIndex) {
+        return hands[playerIndex].getCardList();
+    }
+
+    public int getThinkingTime() {
+        return thinkingTime;
+    }
+
+    public int getScores(int playerIndex) {
+        return scores[playerIndex];
     }
 
 }
