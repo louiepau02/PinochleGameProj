@@ -2,6 +2,7 @@ import java.util.List;
 
 public class MeldDecorator implements MeldInterface {
     protected MeldInterface decoratedMeld;
+    protected String trumpSuit;
 
     public MeldDecorator(MeldInterface decoratedMeld){
         this.decoratedMeld = decoratedMeld;

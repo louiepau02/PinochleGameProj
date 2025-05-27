@@ -14,6 +14,7 @@ public class Pinochle extends CardGame {
             Suit.CLUBS.getSuitShortHand(), "sprites/bigclub.gif",
             Suit.DIAMONDS.getSuitShortHand(), "sprites/bigdiamond.gif",
             Suit.HEARTS.getSuitShortHand(), "sprites/bigheart.gif"));
+
     static public String trumpSuit = null;
 
     static public final int seed = 30008; // Original is 30008
@@ -366,9 +367,11 @@ public class Pinochle extends CardGame {
 
         addActor(trumpInstructionActor, trumpInstructionLocation);
         if (bidWinPlayerIndex == COMPUTER_PLAYER_INDEX) {
-            Suit selectedTrumpSuit = Arrays.stream(Suit.values()).findAny().get();
-            trumpSuit = selectedTrumpSuit.getSuitShortHand();
+            //keep the one:)
+            //Suit selectedTrumpSuit = Arrays.stream(Suit.values()).findAny().get();
+            //trumpSuit = selectedTrumpSuit.getSuitShortHand();
         } else {
+            trumpSuit = null;
             addActor(clubTrumpActor, clubTrumpLocation);
             addActor(spadeTrumpActor, spadeTrumpLocation);
             addActor(heartTrumpActor, heartTrumpLocation);
@@ -618,6 +621,8 @@ public class Pinochle extends CardGame {
         //call the controller then the function
         BidController bidController = new BidController(this, properties, currentBid, nbPlayers);
         bidController.askForBid();
+        System.out.println("the trump suit now" + trumpSuit);
+        bidWinPlayerIndex = bidController.getBidWinPlayerIndex();
         askForTrumpCard();
         for (int i = 0; i < nbPlayers; i++) {
             //or just call newScoringCalculator here
@@ -757,6 +762,23 @@ public class Pinochle extends CardGame {
         delayTime = Integer.parseInt(properties.getProperty("delayTime", "50"));
     }
 
+    //Setter methods
+    public static void setTrumpSuit(String trumpSuit) {
+        Pinochle.trumpSuit = trumpSuit;
+    }
+
+    public void setCurrentBidActor(TextActor textActor) {
+        currentBidActor = textActor;
+    }
+
+    public void setNewBidActor(TextActor textActor) {
+        newBidActor = textActor;
+    }
+
+    public void setPlayerBidActor(TextActor textActor) {
+        playerBidActor = textActor;
+    }
+
     //Getter methods
     public GGButton getBidSelectionActor() {
         return bidSelectionActor;
@@ -816,18 +838,6 @@ public class Pinochle extends CardGame {
 
     public int getDelayTime() {
         return delayTime;
-    }
-
-    public void setCurrentBidActor(TextActor textActor) {
-        currentBidActor = textActor;
-    }
-
-    public void setNewBidActor(TextActor textActor) {
-        newBidActor = textActor;
-    }
-
-    public void setPlayerBidActor(TextActor textActor) {
-        playerBidActor = textActor;
     }
 
     public ArrayList getHands(int playerIndex) {

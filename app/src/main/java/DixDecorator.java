@@ -13,7 +13,7 @@ public class DixDecorator extends MeldDecorator {
     @Override
     public List<String> getHandToCheck() {
         List<String> handToCheck = decoratedMeld.getHandToCheck();
-        handToCheck.add((Rank.NINE.getRankCardValue() + Pinochle.trumpSuit));
+        handToCheck.add((Rank.NINE.getRankCardValue() + this.trumpSuit));
 
         return handToCheck;
     }

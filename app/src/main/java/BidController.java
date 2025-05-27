@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.List;
 
 public class BidController {
-    private int currentBid=0;
+    private int currentBid = 0;
     Pinochle pinochle;
     Properties properties;
 
@@ -35,6 +35,7 @@ public class BidController {
     private final int nbPlayers;
 
     private boolean isAuto = false;
+    private int totalMeldScore = 0; //for computer
 
 
 
@@ -142,6 +143,7 @@ public class BidController {
     }
 
     private void updateBidText(int playerIndex, int newBid) {
+        //System.out.println("updating bid text");
         String playerBidString = "";
         switch (playerIndex) {
             case -1:
@@ -184,17 +186,12 @@ public class BidController {
         boolean moreThanSix = false;
 
         if (playerIndex == COMPUTER_PLAYER_INDEX) {
-            if (isFirst){
-                // Computer has first bid
-                // Opening bid will be equal to the total meld score of its hand.
-            }
-
+            System.out.println("computer bidding now");
             int bidValue = 0;
             if (isAuto && computerAutoBids != null && computerAutoBidIndex < computerAutoBids.size()) {
                 bidValue = computerAutoBids.get(computerAutoBidIndex);
                 computerAutoBidIndex++;
             } else {
-
                 // Populate the dictionary -> access to hand
                 for (Card card : hand){
                     String suit = card.getSuit().toString();
@@ -211,25 +208,37 @@ public class BidController {
                     }
                 }
 
-                for (Map.Entry<String, Integer> entry : suitCount.entrySet()){
-                    if (entry.getValue() >= 6) { // If hand has 6 or more cards in the same suit
-                        // Raise the bid by 20
-                        bidValue += 20;
-                        moreThanSix = true;
+                countTempTrumpSuit(suitCount); // get the temp Trump suit - not being selected yet
+                MeldScoringCalculator meldScoreCalculator = new MeldScoringCalculator();
+                totalMeldScore = meldScoreCalculator.calculateScore(pinochle.getHands(COMPUTER_PLAYER_INDEX));
+                System.out.println("meldscore for computer: " + totalMeldScore);
+
+                if (isFirst){
+                    // Computer has first bid
+                    // Opening bid will be equal to the total meld score of its hand.
+                    System.out.println("Computer is the first bidder");
+                    currentBid += totalMeldScore;
+                } else {
+                    for (Map.Entry<String, Integer> entry : suitCount.entrySet()){
+                        if (entry.getValue() >= 6) { // If hand has 6 or more cards in the same suit
+                            // Raise the bid by 20
+                            bidValue += 20;
+                            moreThanSix = true;
+                        }
                     }
-                }
 
-                if(!moreThanSix){
-                    // Raise by 10
-                    bidValue += 10;
-                }
+                    if(!moreThanSix){
+                        // Raise by 10
+                        bidValue += 10;
+                    }
 
-                int bidThreshold = bidThreshold(suitCount, hand, playerIndex);
+                    int bidThreshold = bidThreshold(suitCount, hand, playerIndex);
 
-                if ((currentBid + bidValue) < bidThreshold){
-                    updateBidText(playerIndex, currentBid + bidValue);
-                }else {
-                    hasComputerPassed = true;
+                    if ((currentBid + bidValue) < bidThreshold){
+                        updateBidText(playerIndex, currentBid + bidValue);
+                    }else {
+                        hasComputerPassed = true;
+                    }
                 }
             }
 
@@ -247,6 +256,7 @@ public class BidController {
             updateBidText(playerIndex, 0);
             hasHumanBid = false;
         } else {
+            System.out.println("human bidding now");
             displayBidButtons(true);
             updateBidText(playerIndex, 0);
             if (isAuto && humanAutoBids != null && humanAutoBidIndex < humanAutoBids.size()) {
@@ -262,6 +272,36 @@ public class BidController {
             }
             hasHumanBid = true;
         }
+    }
+
+    //computer player's hand??
+    private void countTempTrumpSuit(Map<String, Integer> suitCount){
+        List<String> tempTrumpSuit = new ArrayList<>();
+        int maxCount = -1;
+        System.out.println("finding the trump suit - in bid controller");
+        /* Pick the suit with most cards of the same suit in hand*/
+        for(Map.Entry<String, Integer> entry : suitCount.entrySet()){
+            String suit = entry.getKey();
+            int count = entry.getValue();
+
+            if (count > maxCount) {
+                maxCount = count;
+                tempTrumpSuit.clear();
+                tempTrumpSuit.add(suit);
+            } else if (count == maxCount) {
+                tempTrumpSuit.add(suit);
+            }
+        }
+
+        // choose randomly if there is more than one suit with same count
+        if (tempTrumpSuit.size() == 1) {
+            pinochle.setTrumpSuit(tempTrumpSuit.get(0));
+        } else {
+            Random rand = new Random();
+            pinochle.setTrumpSuit(tempTrumpSuit.get(rand.nextInt(tempTrumpSuit.size())));
+        }
+
+        System.out.println("the temp trump suit:"+ pinochle.trumpSuit);
     }
 
     /*
@@ -320,10 +360,13 @@ public class BidController {
             default -> COMPUTER_PLAYER_INDEX;
         };
 
+        playerIndex = 0;
+
         // flag
         boolean isFirst = true;
         do {
             for (int i = 0; i < nbPlayers; i++) {
+                System.out.println("it's player" + i + "turn");
                 askForBidForPlayerIndex(playerIndex, isFirst);
                 isFirst = false;
                 playerIndex = (playerIndex + 1) % nbPlayers;
@@ -352,6 +395,10 @@ public class BidController {
         pinochle.setPlayerBidActor(new TextActor(playerBidString, Color.WHITE,
                 pinochle.getBGcolor(), pinochle.getSmallFont()));
         pinochle.addActor(pinochle.getPlayerBidActor(), pinochle.getPlayerBidLocation());
+    }
+
+    public int getBidWinPlayerIndex(){
+        return bidWinPlayerIndex;
     }
 
 }
