@@ -195,7 +195,7 @@ public class BidController {
                 // Populate the dictionary -> access to hand
                 for (Card card : hand){
                     String suit = Suit.valueOf(card.getSuit().toString()).getSuitShortHand();
-                    System.out.println("the suit added: "+suit);
+                    System.out.println("the suit added: " + suit);
                     // Merge normal suits and xxTWO into a single key
                     if (suit.contains("TWO")) {
                         // it contains TWO
@@ -246,10 +246,9 @@ public class BidController {
 
 
             pinochle.delay(pinochle.getThinkingTime());
-            if (bidValue == 0) {
+            if (bidValue == 0 && !isFirst) {
                 hasComputerPassed = true;
                 hasHumanBid = false;
-
                 return;
             }
 
@@ -361,12 +360,13 @@ public class BidController {
             default -> COMPUTER_PLAYER_INDEX;
         };
 
+        playerIndex =0;
 
         // flag
         boolean isFirst = true;
         do {
             for (int i = 0; i < nbPlayers; i++) {
-                System.out.println("it's player" + i + "turn");
+                System.out.println("it's player" + i + "turn" + isFirst);
                 askForBidForPlayerIndex(playerIndex, isFirst);
                 isFirst = false;
                 playerIndex = (playerIndex + 1) % nbPlayers;
