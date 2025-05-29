@@ -194,7 +194,8 @@ public class BidController {
             } else {
                 // Populate the dictionary -> access to hand
                 for (Card card : hand){
-                    String suit = card.getSuit().toString();
+                    String suit = Suit.valueOf(card.getSuit().toString()).getSuitShortHand();
+                    System.out.println("the suit added: "+suit);
                     // Merge normal suits and xxTWO into a single key
                     if (suit.contains("TWO")) {
                         // it contains TWO
@@ -360,7 +361,6 @@ public class BidController {
             default -> COMPUTER_PLAYER_INDEX;
         };
 
-        playerIndex = 0;
 
         // flag
         boolean isFirst = true;
