@@ -197,13 +197,12 @@ public class Pinochle extends CardGame {
         CardListener packListener = new CardAdapter()  // Listener for dealing pack
         {
             public void leftDoubleClicked(Card card) {
-                setStatus("Card is not valid. Player needs to choose higher card of the same suit or trump suit");
+                setStatus("Card is not valid. Player needs to choose one card from the two.");
                 topTwoSelected = card;
                 topTwo.setTouchEnabled(false);
             }
         };
         topTwo.addCardListener(packListener);
-
 
         // graphics
         RowLayout[] layouts = new RowLayout[nbPlayers];
@@ -923,6 +922,29 @@ public class Pinochle extends CardGame {
         else{
             hands[COMPUTER_PLAYER_INDEX].insert(remaining, true);
         }
+
+        // Alternate between cards until pack is fully given out
+        ArrayList<Card> restOfPack = pack.getCardList();
+        int tempIndex = 0;
+        for (Card card: restOfPack){
+//            System.out.println("Current tempindex: " + tempIndex);
+//            System.out.println("Card of pack right now: " + restOfPack.get(tempIndex));
+            if(bidWinPlayerIndex == COMPUTER_PLAYER_INDEX){
+                if (tempIndex % 2 == 0){
+                    hands[COMPUTER_PLAYER_INDEX].insert(card, true);
+                } else {
+                    hands[HUMAN_PLAYER_INDEX].insert(card, true);
+                }
+            } else{
+                if (tempIndex % 2 == 0){
+                    hands[HUMAN_PLAYER_INDEX].insert(card, true);
+                } else {
+                    hands[COMPUTER_PLAYER_INDEX].insert(card, true);
+                }
+            }
+            tempIndex ++;
+        }
+
 
         // Drawing both hands
         for(int i = 0; i < nbPlayers; i++) {
