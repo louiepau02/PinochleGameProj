@@ -142,9 +142,9 @@ public class Pinochle extends CardGame {
     }
 
 
-
     /**
      * Card Dealing
+     *
      * @param list
      * @return
      */
@@ -184,7 +184,7 @@ public class Pinochle extends CardGame {
 
 
         // Add top 2 cards from pack
-        for(int i = 0; i < 2; i++){
+        for (int i = 0; i < 2; i++) {
             Card tempCard = pack.getCard(i);
 
             tempCard.removeFromHand(false);
@@ -445,6 +445,7 @@ public class Pinochle extends CardGame {
 
     /**
      * Logging Logic
+     *
      * @param player
      * @param card
      */
@@ -510,6 +511,7 @@ public class Pinochle extends CardGame {
 
     /**
      * Check Trick Taking logic
+     *
      * @param card1
      * @param card2
      * @return
@@ -653,6 +655,7 @@ public class Pinochle extends CardGame {
         bidWinPlayerIndex = bidController.getBidWinPlayerIndex();
         askForTrumpCard();
         distributePack();
+
         for (int i = 0; i < nbPlayers; i++) {
             //or just call newScoringCalculator here
             MeldScoringCalculator calculator = new MeldScoringCalculator();
@@ -663,6 +666,8 @@ public class Pinochle extends CardGame {
             delay(delayTime);
         }
         addTrumpInfoToLog();
+
+        discardCards();
 
         int nextPlayer = bidWinPlayerIndex;
         int numberOfCards = hands[COMPUTER_PLAYER_INDEX].getNumberOfCards();
@@ -857,7 +862,7 @@ public class Pinochle extends CardGame {
         return newBidLocation;
     }
 
-    public Color getBGcolor(){
+    public Color getBGcolor() {
         return bgColor;
     }
 
@@ -881,32 +886,31 @@ public class Pinochle extends CardGame {
         return scores[playerIndex];
     }
 
-    public void distributePack(){
+    public void distributePack() {
         // Display top 2 cards from pack
 
         topTwo.setView(this, new RowLayout(playingLocation, (topTwo.getNumberOfCards() + 2) * trickWidth));
         topTwo.draw();
 
-        for(Card card: topTwo.getCardList()){
-            System.out.println("Card = "+ card);
+        for (Card card : topTwo.getCardList()) {
+            System.out.println("Card = " + card);
         }
 
         if (!isAuto) {
             // Bid winner selects card
-            if(bidWinPlayerIndex == COMPUTER_PLAYER_INDEX){
+            if (bidWinPlayerIndex == COMPUTER_PLAYER_INDEX) {
                 // Computer won, automatic pick
                 setStatusText("Player " + bidWinPlayerIndex + " thinking...");
                 topTwoSelected = getRandomCardForHand(topTwo);
                 topTwoSelected.removeFromHand(true);
-            }
-            else {
+            } else {
                 // Player won
                 topTwo.setTouchEnabled(true);
                 setStatus("Player " + bidWinPlayerIndex + " is playing. Please double click on a card to add to hand.");
                 topTwoSelected = null;
 
                 while (null == topTwoSelected) delay(delayTime);
-                System.out.println("Picked card: "+topTwoSelected);
+                System.out.println("Picked card: " + topTwoSelected);
                 topTwoSelected.removeFromHand(true);
             }
         }
@@ -916,41 +920,122 @@ public class Pinochle extends CardGame {
 
         // Add other to other player
         Card remaining = topTwo.get(0);
-        if(bidWinPlayerIndex == COMPUTER_PLAYER_INDEX){
+        if (bidWinPlayerIndex == COMPUTER_PLAYER_INDEX) {
             hands[HUMAN_PLAYER_INDEX].insert(remaining, true);
-        }
-        else{
+        } else {
             hands[COMPUTER_PLAYER_INDEX].insert(remaining, true);
         }
 
         // Alternate between cards until pack is fully given out
         ArrayList<Card> restOfPack = pack.getCardList();
         int tempIndex = 0;
-        for (Card card: restOfPack){
-//            System.out.println("Current tempindex: " + tempIndex);
-//            System.out.println("Card of pack right now: " + restOfPack.get(tempIndex));
-            if(bidWinPlayerIndex == COMPUTER_PLAYER_INDEX){
-                if (tempIndex % 2 == 0){
+        for (Card card : restOfPack) {
+            if (bidWinPlayerIndex == COMPUTER_PLAYER_INDEX) {
+                if (tempIndex % 2 == 0) {
                     hands[COMPUTER_PLAYER_INDEX].insert(card, true);
                 } else {
                     hands[HUMAN_PLAYER_INDEX].insert(card, true);
                 }
-            } else{
-                if (tempIndex % 2 == 0){
+            } else {
+                if (tempIndex % 2 == 0) {
                     hands[HUMAN_PLAYER_INDEX].insert(card, true);
                 } else {
                     hands[COMPUTER_PLAYER_INDEX].insert(card, true);
                 }
             }
-            tempIndex ++;
+            tempIndex++;
         }
 
 
         // Drawing both hands
-        for(int i = 0; i < nbPlayers; i++) {
+        for (int i = 0; i < nbPlayers; i++) {
             //hands[i].setView(this, layouts[i]);
             hands[i].draw();
         }
     }
+
+    public void discardCards() {
+        // pick 12 cards to get rid of
+        int nextPlayer = bidWinPlayerIndex;
+        for (int i = 0; i < 24; i++) {
+            if (!isAuto) {
+                if (nextPlayer == HUMAN_PLAYER_INDEX) {
+                    // player discards one card
+                    hands[HUMAN_PLAYER_INDEX].setTouchEnabled(true);
+                    setStatus("Player " + bidWinPlayerIndex + " is playing. Please double click on a card to discard from hand.");
+                    selected = null;
+                    while (null == selected) delay(delayTime);
+                    selected.removeFromHand(true);
+                } else {
+                    // computer discards one card
+                    setStatusText("Player " + nextPlayer + " thinking...");
+                    /*
+                    HELLO THIS LOGIC FOR HOW THE COMPUTER PLAYER DECIDES ON DISCARDING STILL NEEDS WORK !!
+                     */
+//                    Map<Suit, Integer> handSuitCount = createDictOfComputerHand();
+//                    Suit smallestSuit = findSmallestSuit(handSuitCount); // get the smallest suit
+//                    List<Card> toRemove = (hands[COMPUTER_PLAYER_INDEX]).getCardsWithSuit(smallestSuit);
+//                    System.out.println("Cards to remove: " + toRemove);
+                    selected = getRandomCardForHand(hands[COMPUTER_PLAYER_INDEX]);
+                    selected.removeFromHand(true);
+                }
+                nextPlayer = (nextPlayer + 1) % nbPlayers;
+            }
+        }
+    }
+
+    // function to find the suit with the least amount of entries in the dictionary SuitDict
+    public Suit findSmallestSuit(Map<Suit, Integer> suitDict) {
+        List<Suit> tempSmallestSuit = new ArrayList<>();
+        int minCount = 24;
+        // System.out.println("The dictionary is size: " + minCount);
+        /* Pick the suit with least cards of the same suit in hand*/
+        for (Map.Entry<Suit, Integer> entry : suitDict.entrySet()) {
+            Suit suit = entry.getKey();
+            int count = entry.getValue();
+            if (suit.getSuitShortHand().equals(Pinochle.trumpSuit)) {
+                System.out.println("the suit is equal to the trump suit : " + Pinochle.trumpSuit);
+                continue;
+            } else {
+                if (count < minCount) {
+                    // get suit with the least cards
+                    minCount = count;
+                    tempSmallestSuit.clear();
+                    tempSmallestSuit.add(suit);
+
+                } else if (count == minCount) {
+                    tempSmallestSuit.add(suit);
+                }
+            }
+        }
+        return tempSmallestSuit.get(0);
+    }
+
+    // function to create a dictionary
+    public Map<Suit, Integer> createDictOfComputerHand(){
+        // create a dictionary of Computer Player's cards
+        Map<Suit, Integer> handSuitCount = new HashMap<>(); // dictionary
+        ArrayList<Card> tempCardList = hands[COMPUTER_PLAYER_INDEX].getCardList();
+        for (Card card : tempCardList) {
+            Suit currSuit = (Suit) card.getSuit();
+            // Merge normal suits and xxTWO into a single key
+            if (currSuit.toString().contains("TWO")) {
+                // it contains TWO
+                String mergerName = currSuit.name().replace("TWO", "");
+                currSuit = Suit.valueOf(mergerName);
+            }
+
+            if (handSuitCount.containsKey(currSuit)) {
+                handSuitCount.put(currSuit, handSuitCount.get(currSuit) + 1);
+            } else {
+                handSuitCount.put(currSuit, 1);
+            }
+            System.out.println("the suit added: " + currSuit);
+        }
+
+        return handSuitCount;
+    }
+
+
 
 }

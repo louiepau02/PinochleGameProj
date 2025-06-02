@@ -186,7 +186,7 @@ public class BidController {
         boolean moreThanSix = false;
 
         if (playerIndex == COMPUTER_PLAYER_INDEX) {
-            System.out.println("computer bidding now");
+            //System.out.println("computer bidding now");
             int bidValue = 0;
             if (isAuto && computerAutoBids != null && computerAutoBidIndex < computerAutoBids.size()) {
                 bidValue = computerAutoBids.get(computerAutoBidIndex);
@@ -195,7 +195,7 @@ public class BidController {
                 // Populate the dictionary -> access to hand
                 for (Card card : hand){
                     String suit = Suit.valueOf(card.getSuit().toString()).getSuitShortHand();
-                    System.out.println("the suit added: " + suit);
+                    //System.out.println("the suit added: " + suit);
                     // Merge normal suits and xxTWO into a single key
                     if (suit.contains("TWO")) {
                         // it contains TWO
@@ -212,7 +212,7 @@ public class BidController {
                 countTempTrumpSuit(suitCount); // get the temp Trump suit - not being selected yet
                 MeldScoringCalculator meldScoreCalculator = new MeldScoringCalculator();
                 totalMeldScore = meldScoreCalculator.calculateScore(pinochle.getHands(COMPUTER_PLAYER_INDEX));
-                System.out.println("meldscore for computer: " + totalMeldScore);
+                //System.out.println("meldscore for computer: " + totalMeldScore);
 
                 if (isFirst){
                     // Computer has first bid
