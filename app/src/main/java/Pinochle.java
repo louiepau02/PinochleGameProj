@@ -192,46 +192,39 @@ public class Pinochle extends CardGame {
         hands[HUMAN_PLAYER_INDEX].addCardListener(cardListener);
 
 
-        // Add top 2 cards from pack
-        for (int i = 0; i < 2; i++) {
-            Card tempCard = pack.getCard(i);
+        if(cutThroatMode){
+            // Add top 2 cards from pack
+            for (int i = 0; i < 2; i++) {
+                Card tempCard = pack.getCard(i);
 
-            tempCard.removeFromHand(false);
-            topTwo.insert(tempCard, true);
-        }
-
-        System.out.println(hands[HUMAN_PLAYER_INDEX].getCardList());
-        System.out.println(topTwo.getCardList());
-        // Define listener for choosing a card from the pack
-        CardListener packListener = new CardAdapter()  // Listener for dealing pack
-        {
-            public void leftDoubleClicked(Card card) {
-                setStatus("Card is not valid. Player needs to choose one card from the two.");
-                topTwoSelected = card;
-                topTwo.setTouchEnabled(false);
+                tempCard.removeFromHand(false);
+                topTwo.insert(tempCard, true);
             }
-        };
-        topTwo.addCardListener(packListener);
 
-        // graphics
-        RowLayout[] layouts = new RowLayout[nbPlayers];
-        for (int i = 0; i < nbPlayers; i++) {
-            layouts[i] = new RowLayout(handLocations[i], handWidth);
-            layouts[i].setRotationAngle(180 * i);
-            hands[i].setView(this, layouts[i]);
-            hands[i].setTargetArea(new TargetArea(playingLocation));
-            hands[i].draw();
-        }
+            System.out.println(hands[HUMAN_PLAYER_INDEX].getCardList());
+            System.out.println(topTwo.getCardList());
+            // Define listener for choosing a card from the pack
+            CardListener packListener = new CardAdapter()  // Listener for dealing pack
+            {
+                public void leftDoubleClicked(Card card) {
+                    setStatus("Card is not valid. Player needs to choose one card from the two.");
+                    topTwoSelected = card;
+                    topTwo.setTouchEnabled(false);
+                }
+            };
+            topTwo.addCardListener(packListener);
 
-        topTwo.setView(this, new RowLayout(playingLocation, (topTwo.getNumberOfCards() + 3) * trickWidth));
-
-        RowLayout[] trickHandLayouts = new RowLayout[nbPlayers];
-
-        for (int i = 0; i < nbPlayers; i++) {
-            trickHandLayouts[i] = new RowLayout(trickHandLocations[i], handWidth);
-            trickHandLayouts[i].setRotationAngle(90 + 180 * i);
-            trickWinningHands[i].setView(this, trickHandLayouts[i]);
-            trickWinningHands[i].draw();
+            topTwo.setView(this, new RowLayout(playingLocation, (topTwo.getNumberOfCards() + 3) * trickWidth));
+        } else {
+            // graphics
+            RowLayout[] layouts = new RowLayout[nbPlayers];
+            for (int i = 0; i < nbPlayers; i++) {
+                layouts[i] = new RowLayout(handLocations[i], handWidth);
+                layouts[i].setRotationAngle(180 * i);
+                hands[i].setView(this, layouts[i]);
+                hands[i].setTargetArea(new TargetArea(playingLocation));
+                hands[i].draw();
+            }
         }
     }
 

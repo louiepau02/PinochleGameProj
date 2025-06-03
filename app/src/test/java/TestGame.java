@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -22,7 +21,6 @@ public class TestGame {
     public void testOriginal() {
         String testProperties = "properties/test1.properties";
         String logResult = runningGame(testProperties);
-        System.out.println("logResult = " + logResult);
         assertTrue(logResult.contains("Bid:1-140"));
         assertTrue(logResult.contains("Trump: C"));
         assertTrue(logResult.contains("Melding Scores: 190-0"));
@@ -62,7 +60,7 @@ public class TestGame {
     }
 
     public String findLine(String text, String needle) {
-        try (Stream<String> lines = text.lines()) {// Java 11+ ✨
+        try (Stream<String> lines = text.lines()) {// Java 11+
             return lines.filter(line -> line.contains(needle))    // keep matching lines
                     .toList().stream().findAny().orElse(null);
         }
@@ -78,8 +76,9 @@ public class TestGame {
         String[] cardElements = initialCards.split("-");
         assertTrue("log should contain 4 elements", cardElements.length >= 4);
         String[] computerCards = cardElements[1].split(",");
-        List<String> cardsToContain = new ArrayList<>(Arrays.asList("9D", "9D", "9C", "10D", "10D", "10C", "11D", "11D", "11C",
-                "12D", "12C", "13D"));
+        List<String> cardsToContain = new ArrayList<>(Arrays.asList("9D", "9D", "9C", "10D", "10D", "10C", "11D",
+                "11D", "11C", "12D", "12C", "13D"));
+
         for(String computerCard : computerCards) {
             cardsToContain.remove(computerCard);
         }
