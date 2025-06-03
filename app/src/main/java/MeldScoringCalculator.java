@@ -4,10 +4,12 @@ import java.util.*;
 import java.util.List;
 
 public class MeldScoringCalculator {
+    Pinochle pinochle;
     private final List<MeldDecorator> meldsToCheck;
-    public MeldScoringCalculator() {
+    public MeldScoringCalculator(Pinochle pinochle) {
         // grab the pre-built, priority-ordered decorator chains
-        this.meldsToCheck = Meld.getInstance().getMelds();
+        this.pinochle = pinochle;
+        this.meldsToCheck = Meld.getInstance(pinochle.isMeldAdditional()).getMelds();
     }
 
     public int calculateScore(ArrayList<Card> cardList){

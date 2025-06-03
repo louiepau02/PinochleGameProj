@@ -111,7 +111,15 @@ public class Pinochle extends CardGame {
     private int[] scores = new int[nbPlayers];
 
     private int[] autoIndexHands = new int[nbPlayers];
-    private boolean isAuto = false;
+
+
+    //boolean for each game mode
+    private boolean isAuto;
+    private boolean meldAdditional;
+    private boolean smartBidding;
+    private boolean cutThroatMode;
+
+
     private Hand playingArea;
     private Hand topTwo;
     private Hand pack;
@@ -182,39 +190,40 @@ public class Pinochle extends CardGame {
         };
         hands[HUMAN_PLAYER_INDEX].addCardListener(cardListener);
 
+        if(cutThroatMode){
+            // Add top 2 cards from pack
+            for (int i = 0; i < 2; i++) {
+                Card tempCard = pack.getCard(i);
 
-        // Add top 2 cards from pack
-        for (int i = 0; i < 2; i++) {
-            Card tempCard = pack.getCard(i);
-
-            tempCard.removeFromHand(false);
-            topTwo.insert(tempCard, true);
-        }
-
-        System.out.println(hands[HUMAN_PLAYER_INDEX].getCardList());
-        System.out.println(topTwo.getCardList());
-        // Define listener for choosing a card from the pack
-        CardListener packListener = new CardAdapter()  // Listener for dealing pack
-        {
-            public void leftDoubleClicked(Card card) {
-                setStatus("Card is not valid. Player needs to choose one card from the two.");
-                topTwoSelected = card;
-                topTwo.setTouchEnabled(false);
+                tempCard.removeFromHand(false);
+                topTwo.insert(tempCard, true);
             }
-        };
-        topTwo.addCardListener(packListener);
 
-        // graphics
-        RowLayout[] layouts = new RowLayout[nbPlayers];
-        for (int i = 0; i < nbPlayers; i++) {
-            layouts[i] = new RowLayout(handLocations[i], handWidth);
-            layouts[i].setRotationAngle(180 * i);
-            hands[i].setView(this, layouts[i]);
-            hands[i].setTargetArea(new TargetArea(playingLocation));
-            hands[i].draw();
+            System.out.println(hands[HUMAN_PLAYER_INDEX].getCardList());
+            System.out.println(topTwo.getCardList());
+            // Define listener for choosing a card from the pack
+            CardListener packListener = new CardAdapter()  // Listener for dealing pack
+            {
+                public void leftDoubleClicked(Card card) {
+                    setStatus("Card is not valid. Player needs to choose one card from the two.");
+                    topTwoSelected = card;
+                    topTwo.setTouchEnabled(false);
+                }
+            };
+            topTwo.addCardListener(packListener);
+
+            topTwo.setView(this, new RowLayout(playingLocation, (topTwo.getNumberOfCards() + 3) * trickWidth));
+        } else {
+            // graphics
+            RowLayout[] layouts = new RowLayout[nbPlayers];
+            for (int i = 0; i < nbPlayers; i++) {
+                layouts[i] = new RowLayout(handLocations[i], handWidth);
+                layouts[i].setRotationAngle(180 * i);
+                hands[i].setView(this, layouts[i]);
+                hands[i].setTargetArea(new TargetArea(playingLocation));
+                hands[i].draw();
+            }
         }
-
-        topTwo.setView(this, new RowLayout(playingLocation, (topTwo.getNumberOfCards() + 3) * trickWidth));
 
         RowLayout[] trickHandLayouts = new RowLayout[nbPlayers];
 
@@ -654,11 +663,13 @@ public class Pinochle extends CardGame {
         System.out.println("the trump suit now" + trumpSuit);
         bidWinPlayerIndex = bidController.getBidWinPlayerIndex();
         askForTrumpCard();
-        distributePack();
+        if(cutThroatMode){
+            distributePack();
+        }
 
         for (int i = 0; i < nbPlayers; i++) {
             //or just call newScoringCalculator here
-            MeldScoringCalculator calculator = new MeldScoringCalculator();
+            MeldScoringCalculator calculator = new MeldScoringCalculator(this);
             scores[i] = calculator.calculateScore(hands[i].getCardList());
             System.out.println("checking player" + i + "score" + scores[i]);
             System.out.println();
@@ -667,7 +678,11 @@ public class Pinochle extends CardGame {
         }
         addTrumpInfoToLog();
 
-        discardCards();
+        if(cutThroatMode){
+            discardCards();
+        }
+
+
 
         int nextPlayer = bidWinPlayerIndex;
         int numberOfCards = hands[COMPUTER_PLAYER_INDEX].getNumberOfCards();
@@ -764,6 +779,10 @@ public class Pinochle extends CardGame {
         initScores();
         initScore();
         setupPlayerAutoMovements();
+        System.out.println("isAuto" + isAuto);
+        System.out.println("meldAdditional" + meldAdditional);
+        System.out.println("SMART BIDDING" + smartBidding);
+        System.out.println("cut Throat" + cutThroatMode);
         initGame();
         playGame();
 
@@ -792,98 +811,12 @@ public class Pinochle extends CardGame {
         super(700, 700, 30);
         this.properties = properties;
         isAuto = Boolean.parseBoolean(properties.getProperty("isAuto"));
+        meldAdditional = Boolean.parseBoolean(properties.getProperty("melds.additional"));
+        smartBidding = Boolean.parseBoolean(properties.getProperty("players.0.smartbids"));
+        cutThroatMode = Boolean.parseBoolean(properties.getProperty("mode.cutthroat"));
+
         thinkingTime = Integer.parseInt(properties.getProperty("thinkingTime", "200"));
         delayTime = Integer.parseInt(properties.getProperty("delayTime", "50"));
-    }
-
-    //Setter methods
-    public static void setTrumpSuit(String trumpSuit) {
-        Pinochle.trumpSuit = trumpSuit;
-    }
-
-    public void setCurrentBidActor(TextActor textActor) {
-        currentBidActor = textActor;
-    }
-
-    public void setNewBidActor(TextActor textActor) {
-        newBidActor = textActor;
-    }
-
-    public void setPlayerBidActor(TextActor textActor) {
-        playerBidActor = textActor;
-    }
-
-    //Getter methods
-    public GGButton getBidSelectionActor() {
-        return bidSelectionActor;
-    }
-
-    public GGButton getBidConfirmActor() {
-        return bidConfirmActor;
-    }
-
-    public GGButton getBidPassActor() {
-        return bidPassActor;
-    }
-
-    public TextActor getPlayerBidActor() {
-        return playerBidActor;
-    }
-
-    public TextActor getCurrentBidActor() {
-        return currentBidActor;
-    }
-
-    public TextActor getNewBidActor() {
-        return newBidActor;
-    }
-
-    public Location getBidSelectionLocation() {
-        return bidSelectionLocation;
-    }
-
-    public Location getBidConfirmLocation() {
-        return bidConfirmLocation;
-    }
-
-    public Location getBidPassLocation() {
-        return bidPassLocation;
-    }
-
-    public Location getPlayerBidLocation() {
-        return playerBidLocation;
-    }
-
-    public Location getCurrentBidLocation() {
-        return currentBidLocation;
-    }
-
-    public Location getNewBidLocation() {
-        return newBidLocation;
-    }
-
-    public Color getBGcolor() {
-        return bgColor;
-    }
-
-    public Font getSmallFont() {
-        return smallFont;
-    }
-
-    public int getDelayTime() {
-        return delayTime;
-    }
-
-    public ArrayList getHands(int playerIndex) {
-        return hands[playerIndex].getCardList();
-    }
-
-    public int getThinkingTime() {
-        return thinkingTime;
-    }
-
-    public int getScores(int playerIndex) {
-        return scores[playerIndex];
     }
 
     public void distributePack() {
@@ -1106,6 +1039,110 @@ public class Pinochle extends CardGame {
         return handSuitCount;
     }
 
+    //Setter methods
+    public static void setTrumpSuit(String trumpSuit) {
+        Pinochle.trumpSuit = trumpSuit;
+    }
 
+    public void setCurrentBidActor(TextActor textActor) {
+        currentBidActor = textActor;
+    }
+
+    public void setNewBidActor(TextActor textActor) {
+        newBidActor = textActor;
+    }
+
+    public void setPlayerBidActor(TextActor textActor) {
+        playerBidActor = textActor;
+    }
+
+    //Getter methods
+    public GGButton getBidSelectionActor() {
+        return bidSelectionActor;
+    }
+
+    public GGButton getBidConfirmActor() {
+        return bidConfirmActor;
+    }
+
+    public GGButton getBidPassActor() {
+        return bidPassActor;
+    }
+
+    public TextActor getPlayerBidActor() {
+        return playerBidActor;
+    }
+
+    public TextActor getCurrentBidActor() {
+        return currentBidActor;
+    }
+
+    public TextActor getNewBidActor() {
+        return newBidActor;
+    }
+
+    public Location getBidSelectionLocation() {
+        return bidSelectionLocation;
+    }
+
+    public Location getBidConfirmLocation() {
+        return bidConfirmLocation;
+    }
+
+    public Location getBidPassLocation() {
+        return bidPassLocation;
+    }
+
+    public Location getPlayerBidLocation() {
+        return playerBidLocation;
+    }
+
+    public Location getCurrentBidLocation() {
+        return currentBidLocation;
+    }
+
+    public Location getNewBidLocation() {
+        return newBidLocation;
+    }
+
+    public Color getBGcolor() {
+        return bgColor;
+    }
+
+    public Font getSmallFont() {
+        return smallFont;
+    }
+
+    public int getDelayTime() {
+        return delayTime;
+    }
+
+    public ArrayList getHands(int playerIndex) {
+        return hands[playerIndex].getCardList();
+    }
+
+    public int getThinkingTime() {
+        return thinkingTime;
+    }
+
+    public int getScores(int playerIndex) {
+        return scores[playerIndex];
+    }
+
+    public boolean isAuto() {
+        return isAuto;
+    }
+
+    public boolean isMeldAdditional() {
+        return meldAdditional;
+    }
+
+    public boolean isSmartBidding() {
+        return smartBidding;
+    }
+
+    public boolean isCutThroatMode() {
+        return cutThroatMode;
+    }
 
 }

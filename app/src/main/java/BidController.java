@@ -34,7 +34,7 @@ public class BidController {
 
     private final int nbPlayers;
 
-    private boolean isAuto = false;
+    //private boolean isAuto = false;
     private int totalMeldScore = 0; //for computer
 
 
@@ -188,61 +188,68 @@ public class BidController {
         if (playerIndex == COMPUTER_PLAYER_INDEX) {
             //System.out.println("computer bidding now");
             int bidValue = 0;
-            if (isAuto && computerAutoBids != null && computerAutoBidIndex < computerAutoBids.size()) {
+            if (pinochle.isAuto() && computerAutoBids != null && computerAutoBidIndex < computerAutoBids.size()) {
                 bidValue = computerAutoBids.get(computerAutoBidIndex);
                 computerAutoBidIndex++;
             } else {
-                // Populate the dictionary -> access to hand
-                for (Card card : hand){
-                    String suit = Suit.valueOf(card.getSuit().toString()).getSuitShortHand();
-                    //System.out.println("the suit added: " + suit);
-                    // Merge normal suits and xxTWO into a single key
-                    if (suit.contains("TWO")) {
-                        // it contains TWO
-                        suit = suit.replace("TWO", "");
-                    }
+                if(pinochle.isSmartBidding()){
+                    // Populate the dictionary -> access to hand
+                    for (Card card : hand){
+                        String suit = Suit.valueOf(card.getSuit().toString()).getSuitShortHand();
+                        //System.out.println("the suit added: " + suit);
+                        // Merge normal suits and xxTWO into a single key
+                        if (suit.contains("TWO")) {
+                            // it contains TWO
+                            suit = suit.replace("TWO", "");
+                        }
 
-                    if (suitCount.containsKey(suit)){
-                        suitCount.put(suit, suitCount.get(suit) + 1);
-                    } else {
-                        suitCount.put(suit, 1);
-                    }
-                }
-
-                countTempTrumpSuit(suitCount); // get the temp Trump suit - not being selected yet
-                MeldScoringCalculator meldScoreCalculator = new MeldScoringCalculator();
-                totalMeldScore = meldScoreCalculator.calculateScore(pinochle.getHands(COMPUTER_PLAYER_INDEX));
-                //System.out.println("meldscore for computer: " + totalMeldScore);
-
-                if (isFirst){
-                    // Computer has first bid
-                    // Opening bid will be equal to the total meld score of its hand.
-                    System.out.println("Computer is the first bidder");
-                    currentBid += totalMeldScore;
-                } else {
-                    for (Map.Entry<String, Integer> entry : suitCount.entrySet()){
-                        if (entry.getValue() >= 6) { // If hand has 6 or more cards in the same suit
-                            // Raise the bid by 20
-                            bidValue += 20;
-                            moreThanSix = true;
+                        if (suitCount.containsKey(suit)){
+                            suitCount.put(suit, suitCount.get(suit) + 1);
+                        } else {
+                            suitCount.put(suit, 1);
                         }
                     }
 
-                    if(!moreThanSix){
-                        // Raise by 10
-                        bidValue += 10;
-                    }
+                    countTempTrumpSuit(suitCount); // get the temp Trump suit - not being selected yet
+                    MeldScoringCalculator meldScoreCalculator = new MeldScoringCalculator(pinochle);
+                    totalMeldScore = meldScoreCalculator.calculateScore(pinochle.getHands(COMPUTER_PLAYER_INDEX));
+                    //System.out.println("meldscore for computer: " + totalMeldScore);
 
-                    int bidThreshold = bidThreshold(suitCount, hand, playerIndex);
+                    if (isFirst){
+                        // Computer has first bid
+                        // Opening bid will be equal to the total meld score of its hand.
+                        System.out.println("Computer is the first bidder");
+                        currentBid += totalMeldScore;
+                    } else {
+                        for (Map.Entry<String, Integer> entry : suitCount.entrySet()){
+                            if (entry.getValue() >= 6) { // If hand has 6 or more cards in the same suit
+                                // Raise the bid by 20
+                                bidValue += 20;
+                                moreThanSix = true;
+                            }
+                        }
 
-                    if ((currentBid + bidValue) < bidThreshold){
-                        updateBidText(playerIndex, currentBid + bidValue);
-                    }else {
-                        hasComputerPassed = true;
+                        if(!moreThanSix){
+                            // Raise by 10
+                            bidValue += 10;
+                        }
+
+                        int bidThreshold = bidThreshold(suitCount, hand, playerIndex);
+
+                        if ((currentBid + bidValue) < bidThreshold){
+                            updateBidText(playerIndex, currentBid + bidValue);
+                        }else {
+                            hasComputerPassed = true;
+                        }
                     }
+                } else {
+                    //original implementation from skeleton code
+                    Random random = new Random();
+                    int randomBidBase = random.nextInt(3);
+                    bidValue = randomBidBase * 10;
+                    updateBidText(playerIndex, currentBid + bidValue);
                 }
             }
-
 
 
             pinochle.delay(pinochle.getThinkingTime());
@@ -256,10 +263,10 @@ public class BidController {
             updateBidText(playerIndex, 0);
             hasHumanBid = false;
         } else {
-            System.out.println("human bidding now");
             displayBidButtons(true);
             updateBidText(playerIndex, 0);
-            if (isAuto && humanAutoBids != null && humanAutoBidIndex < humanAutoBids.size()) {
+            if (pinochle.isAuto() && humanAutoBids != null && humanAutoBidIndex < humanAutoBids.size()) {
+                System.out.println("human auto bidding now");
                 humanBid = humanAutoBids.get(humanAutoBidIndex);
                 currentBid = currentBid + humanBid;
                 humanAutoBidIndex++;
@@ -268,6 +275,7 @@ public class BidController {
                 }
                 updateBidText(HUMAN_PLAYER_INDEX, currentBid);
             } else {
+                System.out.println("human manual bidding now");
                 while (!hasHumanBid && !hasHumanPassed) pinochle.delay(pinochle.getDelayTime());
             }
             hasHumanBid = true;
@@ -337,6 +345,7 @@ public class BidController {
         String player1Bids = properties.getProperty("players.1.bids", ""); // 0,20,10,20,0
 
         if (player0Bids != null) {
+            System.out.println("there is auto bid for player 0 - " + player0Bids);
             if (!player0Bids.isEmpty()) {
                 java.util.List<String> bidStrings = Arrays.asList(player0Bids.split(","));
                 computerAutoBids.addAll(bidStrings.stream().map(Integer::parseInt).toList());
@@ -344,9 +353,11 @@ public class BidController {
         }
 
         if (player1Bids != null) {
+            System.out.println("there is auto bid for player 1 - " + player1Bids);
             if (!player1Bids.isEmpty()) {
                 List<String> bidStrings = Arrays.asList(player1Bids.split(","));
                 humanAutoBids.addAll(bidStrings.stream().map(Integer::parseInt).toList());
+                //System.out.println("human auto bid is ? " + humanAutoBids == null);
             }
         }
 
@@ -360,7 +371,7 @@ public class BidController {
             default -> COMPUTER_PLAYER_INDEX;
         };
 
-        playerIndex =0;
+        //playerIndex =0;
 
         // flag
         boolean isFirst = true;
