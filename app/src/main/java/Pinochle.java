@@ -957,6 +957,13 @@ public class Pinochle extends CardGame {
     public void discardCards() {
         // pick 12 cards to get rid of
         int nextPlayer = bidWinPlayerIndex;
+
+        //for computer discarding 12 cards
+        List<Card> computerHand = hands[COMPUTER_PLAYER_INDEX].getCardList();
+        List<Card> toDiscard = chooseCardsToDiscard(computerHand, Pinochle.trumpSuit);
+        int discardIndex = 0;
+
+
         for (int i = 0; i < 24; i++) {
             if (!isAuto) {
                 if (nextPlayer == HUMAN_PLAYER_INDEX) {
@@ -976,13 +983,76 @@ public class Pinochle extends CardGame {
 //                    Suit smallestSuit = findSmallestSuit(handSuitCount); // get the smallest suit
 //                    List<Card> toRemove = (hands[COMPUTER_PLAYER_INDEX]).getCardsWithSuit(smallestSuit);
 //                    System.out.println("Cards to remove: " + toRemove);
-                    selected = getRandomCardForHand(hands[COMPUTER_PLAYER_INDEX]);
-                    selected.removeFromHand(true);
+
+                    if (discardIndex < toDiscard.size()) {
+                        selected = toDiscard.get(discardIndex);
+                        selected.removeFromHand(true);
+                        discardIndex++;
+                    } else {
+                        // by est. - randomly select - still use it if louie(me)'s doesn't work lol
+                        selected = getRandomCardForHand(hands[COMPUTER_PLAYER_INDEX]);
+                        selected.removeFromHand(true);
+                    }
+
                 }
                 nextPlayer = (nextPlayer + 1) % nbPlayers;
+            } else {
+                //auto mode - what to do??
+                if (nextPlayer == HUMAN_PLAYER_INDEX) {
+                    // Auto discard randomly for human (or use test config)
+                    selected = getRandomCardForHand(hands[HUMAN_PLAYER_INDEX]);
+                    selected.removeFromHand(true);
+                } else {
+                    selected = toDiscard.get(discardIndex);
+                    selected.removeFromHand(true);
+                    discardIndex++;
+                }
             }
         }
     }
+
+    private List<Card> chooseCardsToDiscard(List<Card> computerHand, String trumpSuit) {
+        List<Card> toDiscard = new ArrayList<>();
+        List<Card> remaining = new ArrayList<>(computerHand);
+
+        while(toDiscard.size()<12){
+            SuitAnalyzer analyzer = new SuitAnalyzer(remaining);
+            String suitDiscard = analyzer.findSmallestSuit(trumpSuit);
+
+            System.out.println("smallest suit rn" + suitDiscard);
+
+            //make sure we do have a smallest suit outside trump suit
+            if (suitDiscard == null) break;
+
+            //get the list of the card with suit in order(small to large in rank)
+            //so clubs from small to large, then diamond from small to large ... for all in hand
+            List<Card> suitCards = remaining.stream()
+                    .filter(c -> normalizeSuit((Suit) c.getSuit()) == suitDiscard)
+                    .sorted(Comparator.comparingInt(c -> ((Rank) c.getRank()).getRankCardValue()))
+                    .toList();
+
+            for (Card card : suitCards) {
+                if (toDiscard.size() >= 12) break;
+                toDiscard.add(card);
+            }
+            remaining.removeAll(toDiscard);
+        }
+
+        return toDiscard;
+    }
+
+    private String normalizeSuit(Suit suit) {
+        String name = suit.name();
+        //full name of the suit
+        //System.out.println(name);
+        if (name.contains("TWO")) {
+            name = name.replace("TWO", "");
+        }
+        //System.out.println(Suit.valueOf(name).getSuitShortHand());
+        //get the shorthand value
+        return Suit.valueOf(name).getSuitShortHand();
+    }
+
 
     // function to find the suit with the least amount of entries in the dictionary SuitDict
     public Suit findSmallestSuit(Map<Suit, Integer> suitDict) {
