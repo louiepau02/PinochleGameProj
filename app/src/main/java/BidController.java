@@ -38,7 +38,6 @@ public class BidController {
     private int totalMeldScore = 0; //for computer
 
 
-
     public BidController(Pinochle game, Properties properties, int bid, int playerNum) {
         this.pinochle = game;
         this.properties = properties;
@@ -221,9 +220,11 @@ public class BidController {
                         System.out.println("Computer is the first bidder");
                         currentBid += totalMeldScore;
                     } else {
+                        System.out.println("not first - thinking if they should bid");
                         for (Map.Entry<String, Integer> entry : suitCount.entrySet()){
                             if (entry.getValue() >= 6) { // If hand has 6 or more cards in the same suit
                                 // Raise the bid by 20
+                                System.out.println("bigger than 6 in same suit +20:)");
                                 bidValue += 20;
                                 moreThanSix = true;
                             }
@@ -231,14 +232,19 @@ public class BidController {
 
                         if(!moreThanSix){
                             // Raise by 10
+                            System.out.println("no bigger than 6 in same suit +10:)");
                             bidValue += 10;
                         }
 
                         int bidThreshold = bidThreshold(suitCount, hand, playerIndex);
+                        System.out.println("bid threshold = " + bidThreshold);
+                        System.out.println("current bid + bidvalue" + (currentBid + bidValue));
 
                         if ((currentBid + bidValue) < bidThreshold){
                             updateBidText(playerIndex, currentBid + bidValue);
                         }else {
+                            System.out.println("Computer giving up on bidding");
+                            bidValue = 0;
                             hasComputerPassed = true;
                         }
                     }
@@ -263,6 +269,7 @@ public class BidController {
             updateBidText(playerIndex, 0);
             hasHumanBid = false;
         } else {
+            //human bidding part
             displayBidButtons(true);
             updateBidText(playerIndex, 0);
             if (pinochle.isAuto() && humanAutoBids != null && humanAutoBidIndex < humanAutoBids.size()) {
@@ -271,6 +278,7 @@ public class BidController {
                 currentBid = currentBid + humanBid;
                 humanAutoBidIndex++;
                 if (humanBid == 0) {
+                    System.out.println("human giving up bidding now");
                     hasHumanPassed = true;
                 }
                 updateBidText(HUMAN_PLAYER_INDEX, currentBid);
@@ -333,8 +341,9 @@ public class BidController {
                 if (tempcount > largestNum){largestNum = tempcount;}
             }
         }
+        System.out.println("In bid threshold - computer's score now " + totalMeldScore);
 
-        return (Math.max(maxSuitValue, largestNum) + pinochle.getScores(playerIndex)); // need to find this;
+        return (Math.max(maxSuitValue, largestNum) + totalMeldScore); // need to find this;
     }
 
     public void askForBid() {
@@ -377,8 +386,9 @@ public class BidController {
         boolean isFirst = true;
         do {
             for (int i = 0; i < nbPlayers; i++) {
-                System.out.println("it's player" + i + "turn" + isFirst);
+                System.out.println("it's player" + i + "turn - is first? " + isFirst);
                 askForBidForPlayerIndex(playerIndex, isFirst);
+                System.out.println("current bid now " + currentBid);
                 isFirst = false;
                 playerIndex = (playerIndex + 1) % nbPlayers;
                 isContinueBidding = !hasHumanPassed && !hasComputerPassed;
@@ -391,7 +401,7 @@ public class BidController {
 
         removeBids();
         updateBidResult();
-        pinochle.addBidInfoToLog();
+        pinochle.addBidInfoToLog(bidWinPlayerIndex, currentBid);
     }
 
     private void updateBidResult() {
@@ -410,6 +420,10 @@ public class BidController {
 
     public int getBidWinPlayerIndex(){
         return bidWinPlayerIndex;
+    }
+
+    public int getCurrentBid() {
+        return currentBid;
     }
 
 }

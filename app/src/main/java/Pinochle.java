@@ -118,6 +118,7 @@ public class Pinochle extends CardGame {
     private boolean meldAdditional;
     private boolean smartBidding;
     private boolean cutThroatMode;
+    private boolean smartMode;
 
 
     private Hand playingArea;
@@ -190,40 +191,39 @@ public class Pinochle extends CardGame {
         };
         hands[HUMAN_PLAYER_INDEX].addCardListener(cardListener);
 
-        if(cutThroatMode){
-            // Add top 2 cards from pack
-            for (int i = 0; i < 2; i++) {
-                Card tempCard = pack.getCard(i);
 
-                tempCard.removeFromHand(false);
-                topTwo.insert(tempCard, true);
-            }
+        // Add top 2 cards from pack
+        for (int i = 0; i < 2; i++) {
+            Card tempCard = pack.getCard(i);
 
-            System.out.println(hands[HUMAN_PLAYER_INDEX].getCardList());
-            System.out.println(topTwo.getCardList());
-            // Define listener for choosing a card from the pack
-            CardListener packListener = new CardAdapter()  // Listener for dealing pack
-            {
-                public void leftDoubleClicked(Card card) {
-                    setStatus("Card is not valid. Player needs to choose one card from the two.");
-                    topTwoSelected = card;
-                    topTwo.setTouchEnabled(false);
-                }
-            };
-            topTwo.addCardListener(packListener);
-
-            topTwo.setView(this, new RowLayout(playingLocation, (topTwo.getNumberOfCards() + 3) * trickWidth));
-        } else {
-            // graphics
-            RowLayout[] layouts = new RowLayout[nbPlayers];
-            for (int i = 0; i < nbPlayers; i++) {
-                layouts[i] = new RowLayout(handLocations[i], handWidth);
-                layouts[i].setRotationAngle(180 * i);
-                hands[i].setView(this, layouts[i]);
-                hands[i].setTargetArea(new TargetArea(playingLocation));
-                hands[i].draw();
-            }
+            tempCard.removeFromHand(false);
+            topTwo.insert(tempCard, true);
         }
+
+        System.out.println(hands[HUMAN_PLAYER_INDEX].getCardList());
+        System.out.println(topTwo.getCardList());
+        // Define listener for choosing a card from the pack
+        CardListener packListener = new CardAdapter()  // Listener for dealing pack
+        {
+            public void leftDoubleClicked(Card card) {
+                setStatus("Card is not valid. Player needs to choose one card from the two.");
+                topTwoSelected = card;
+                topTwo.setTouchEnabled(false);
+            }
+        };
+        topTwo.addCardListener(packListener);
+
+        // graphics
+        RowLayout[] layouts = new RowLayout[nbPlayers];
+        for (int i = 0; i < nbPlayers; i++) {
+            layouts[i] = new RowLayout(handLocations[i], handWidth);
+            layouts[i].setRotationAngle(180 * i);
+            hands[i].setView(this, layouts[i]);
+            hands[i].setTargetArea(new TargetArea(playingLocation));
+            hands[i].draw();
+        }
+
+        topTwo.setView(this, new RowLayout(playingLocation, (topTwo.getNumberOfCards() + 3) * trickWidth));
 
         RowLayout[] trickHandLayouts = new RowLayout[nbPlayers];
 
@@ -234,7 +234,6 @@ public class Pinochle extends CardGame {
             trickWinningHands[i].draw();
         }
     }
-
 
     // return random Card from ArrayList
     public static Card randomCard(ArrayList<Card> list) {
@@ -354,6 +353,8 @@ public class Pinochle extends CardGame {
     private void dealingOut(Hand[] hands, int nbPlayers, int nbCardsPerPlayer) {
         pack = deck.toHand(false);
 
+
+
         for (int i = 0; i < nbPlayers; i++) {
             String initialCardsKey = "players." + i + ".initialcards";
             String initialCardsValue = properties.getProperty(initialCardsKey);
@@ -382,6 +383,8 @@ public class Pinochle extends CardGame {
                 hands[i].insert(dealt, false);
             }
         }
+
+        System.out.println("pack here " + pack == null);
     }
 
     /**
@@ -469,8 +472,8 @@ public class Pinochle extends CardGame {
         logResult.append(",");
     }
 
-    public void addBidInfoToLog() {
-        logResult.append("Bid:" + bidWinPlayerIndex + "-" + currentBid + "\n");
+    public void addBidInfoToLog(int winner, int bid) {
+        logResult.append("Bid:" + winner + "-" + bid + "\n");
     }
 
     private void addTrumpInfoToLog() {
@@ -562,7 +565,9 @@ public class Pinochle extends CardGame {
         Suit existingSuit = (Suit) existingCard.getSuit();
         Rank existingRank = (Rank) existingCard.getRank();
 
-        if (playingSuit.getSuitShortHand().equals(existingSuit.getSuitShortHand()) && playingRank.getRankCardValue() > existingRank.getRankCardValue()) {
+        // Same Suit, Higher Rank, then valid
+        if (playingSuit.getSuitShortHand().equals(existingSuit.getSuitShortHand()) &&
+                playingRank.getRankCardValue() > existingRank.getRankCardValue()) {
             return true;
         }
 
@@ -574,8 +579,10 @@ public class Pinochle extends CardGame {
         boolean isExistingTrump = existingSuit.getSuitShortHand().equals(trumpSuit);
         boolean isPlayingTrump = playingSuit.getSuitShortHand().equals(trumpSuit);
 
-        if (isExistingTrump && isPlayingTrump) {
-            return false;
+        // If the current is trump, then there is already no trump card with higher rank.Add commentMore actions
+        // Otherwise, the above if should return false.
+        if (isExistingTrump) {
+            return true;
         }
 
         if (isPlayingTrump) {
@@ -662,6 +669,8 @@ public class Pinochle extends CardGame {
         bidController.askForBid();
         System.out.println("the trump suit now" + trumpSuit);
         bidWinPlayerIndex = bidController.getBidWinPlayerIndex();
+        currentBid = bidController.getCurrentBid();
+        System.out.println("current bid " + currentBid);
         askForTrumpCard();
         if(cutThroatMode){
             distributePack();
@@ -814,6 +823,7 @@ public class Pinochle extends CardGame {
         meldAdditional = Boolean.parseBoolean(properties.getProperty("melds.additional"));
         smartBidding = Boolean.parseBoolean(properties.getProperty("players.0.smartbids"));
         cutThroatMode = Boolean.parseBoolean(properties.getProperty("mode.cutthroat"));
+        smartMode = Boolean.parseBoolean(properties.getProperty("mode.smarttrick"));
 
         thinkingTime = Integer.parseInt(properties.getProperty("thinkingTime", "200"));
         delayTime = Integer.parseInt(properties.getProperty("delayTime", "50"));
@@ -952,8 +962,6 @@ public class Pinochle extends CardGame {
             SuitAnalyzer analyzer = new SuitAnalyzer(remaining);
             String suitDiscard = analyzer.findSmallestSuit(trumpSuit);
 
-            System.out.println("smallest suit rn" + suitDiscard);
-
             //make sure we do have a smallest suit outside trump suit
             if (suitDiscard == null) break;
 
@@ -984,59 +992,6 @@ public class Pinochle extends CardGame {
         //System.out.println(Suit.valueOf(name).getSuitShortHand());
         //get the shorthand value
         return Suit.valueOf(name).getSuitShortHand();
-    }
-
-
-    // function to find the suit with the least amount of entries in the dictionary SuitDict
-    public Suit findSmallestSuit(Map<Suit, Integer> suitDict) {
-        List<Suit> tempSmallestSuit = new ArrayList<>();
-        int minCount = 24;
-        // System.out.println("The dictionary is size: " + minCount);
-        /* Pick the suit with least cards of the same suit in hand*/
-        for (Map.Entry<Suit, Integer> entry : suitDict.entrySet()) {
-            Suit suit = entry.getKey();
-            int count = entry.getValue();
-            if (suit.getSuitShortHand().equals(Pinochle.trumpSuit)) {
-                System.out.println("the suit is equal to the trump suit : " + Pinochle.trumpSuit);
-                continue;
-            } else {
-                if (count < minCount) {
-                    // get suit with the least cards
-                    minCount = count;
-                    tempSmallestSuit.clear();
-                    tempSmallestSuit.add(suit);
-
-                } else if (count == minCount) {
-                    tempSmallestSuit.add(suit);
-                }
-            }
-        }
-        return tempSmallestSuit.get(0);
-    }
-
-    // function to create a dictionary
-    public Map<Suit, Integer> createDictOfComputerHand(){
-        // create a dictionary of Computer Player's cards
-        Map<Suit, Integer> handSuitCount = new HashMap<>(); // dictionary
-        ArrayList<Card> tempCardList = hands[COMPUTER_PLAYER_INDEX].getCardList();
-        for (Card card : tempCardList) {
-            Suit currSuit = (Suit) card.getSuit();
-            // Merge normal suits and xxTWO into a single key
-            if (currSuit.toString().contains("TWO")) {
-                // it contains TWO
-                String mergerName = currSuit.name().replace("TWO", "");
-                currSuit = Suit.valueOf(mergerName);
-            }
-
-            if (handSuitCount.containsKey(currSuit)) {
-                handSuitCount.put(currSuit, handSuitCount.get(currSuit) + 1);
-            } else {
-                handSuitCount.put(currSuit, 1);
-            }
-            System.out.println("the suit added: " + currSuit);
-        }
-
-        return handSuitCount;
     }
 
     //Setter methods

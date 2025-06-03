@@ -22,6 +22,7 @@ public class TestGame {
     public void testOriginal() {
         String testProperties = "properties/test1.properties";
         String logResult = runningGame(testProperties);
+        System.out.println("logResult = " + logResult);
         assertTrue(logResult.contains("Bid:1-140"));
         assertTrue(logResult.contains("Trump: C"));
         assertTrue(logResult.contains("Melding Scores: 190-0"));
@@ -55,7 +56,7 @@ public class TestGame {
         String testProperties = "properties/test4.properties";
         String logResult = runningGame(testProperties);
         System.out.println("logResult = " + logResult);
-        assertTrue(logResult.contains("Bid:0-230"));
+        assertTrue(logResult.contains("Bid:0-220"));
         assertTrue(logResult.contains("Trump: C"));
         assertTrue(logResult.contains("Melding Scores: 190-0"));
     }
