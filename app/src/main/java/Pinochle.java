@@ -125,6 +125,8 @@ public class Pinochle extends CardGame {
     private Hand topTwo;
     private Hand pack;
 
+    private final Map<String, Integer> cardDistributed = new HashMap<>();
+
     /**
      * Score Section
      */
@@ -194,6 +196,34 @@ public class Pinochle extends CardGame {
 
         if(cutThroatMode){
             if(isAuto){
+                int dealerIndex = (bidWinPlayerIndex + 1) % nbPlayers;
+                System.out.println("bidWinPlayerIndex="+bidWinPlayerIndex);
+                System.out.println("dealerIndex="+dealerIndex);
+
+                String[] computerExtras = properties.getProperty("players.0.extra_cards").split(",");
+                String[] humanExtras = properties.getProperty("players.1.extra_cards").split(",");
+
+                // the top two
+                Card top1 = getCardFromShortString(computerExtras[0].trim(), deck);
+                Card top2 = getCardFromShortString(humanExtras[0].trim(), deck);
+
+                top1.removeFromHand(false);
+                top2.removeFromHand(false);
+
+                topTwo.insert(top1, true);
+                topTwo.insert(top2, true);
+
+                topTwo.setView(this, new RowLayout(playingLocation, (topTwo.getNumberOfCards() + 3) * trickWidth));
+
+
+                RowLayout[] layouts = new RowLayout[nbPlayers];
+                for (int i = 0; i < nbPlayers; i++) {
+                    layouts[i] = new RowLayout(handLocations[i], handWidth);
+                    layouts[i].setRotationAngle(180 * i);
+                    hands[i].setView(this, layouts[i]);
+                    hands[i].setTargetArea(new TargetArea(playingLocation));
+                    hands[i].draw();
+                }
 
             }else{
                 // Add top 2 cards from pack
@@ -240,6 +270,45 @@ public class Pinochle extends CardGame {
                 hands[i].draw();
             }
         }
+    }
+
+
+    //from short string in test properties file - card
+    private Card getCardFromShortString(String s, Deck deck) {
+        if (s == null || s.length() < 2) return null;
+
+        Rank rank = getRankFromString(s);
+        Suit suit = getSuitFromString(s);
+
+        System.out.println("rank is" + rank + "suit is "+ suit);
+
+
+        if (rank == null || suit == null) {
+            System.err.println("Invalid card string: " + s);
+        }
+
+        String suitChar = suit.getSuitShortHand();  // Use suit enum directly
+        String key = rank.toString() + suitChar;
+        int used = cardDistributed.getOrDefault(key, 0);
+
+        // Map to the correct TWO variant
+        switch (suitChar) {
+            case "C":
+                suit = (used == 0) ? Suit.CLUBS : Suit.CLUBSTWO;
+                break;
+            case "D":
+                suit = (used == 0) ? Suit.DIAMONDS : Suit.DIAMONDSTWO;
+                break;
+            case "H":
+                suit = (used == 0) ? Suit.HEARTS : Suit.HEARTSTWO;
+                break;
+            case "S":
+                suit = (used == 0) ? Suit.SPADES : Suit.SPADESTWO;
+                break;
+        }
+        cardDistributed.put(key, used + 1);
+
+        return deck.cards[deck.getSuitId(suit)][deck.getRankId(rank)];
     }
 
     // return random Card from ArrayList
@@ -360,8 +429,6 @@ public class Pinochle extends CardGame {
     private void dealingOut(Hand[] hands, int nbPlayers, int nbCardsPerPlayer) {
         pack = deck.toHand(false);
 
-
-
         for (int i = 0; i < nbPlayers; i++) {
             String initialCardsKey = "players." + i + ".initialcards";
             String initialCardsValue = properties.getProperty(initialCardsKey);
@@ -377,6 +444,8 @@ public class Pinochle extends CardGame {
                 if (card != null) {
                     card.removeFromHand(false);
                     hands[i].insert(card, false);
+                    String key = card.getRank().toString() + card.getSuit().toString();
+                    cardDistributed.put(key, cardDistributed.getOrDefault(key, 0) + 1);
                 }
             }
         }
@@ -388,10 +457,11 @@ public class Pinochle extends CardGame {
                 Card dealt = randomCard(pack.getCardList());
                 dealt.removeFromHand(false);
                 hands[i].insert(dealt, false);
+                // Track usage
+                String key = dealt.getRank().toString() + dealt.getSuit().toString();
+                cardDistributed.put(key, cardDistributed.getOrDefault(key, 0) + 1);
             }
         }
-
-        System.out.println("pack here " + pack == null);
     }
 
     /**
@@ -838,70 +908,109 @@ public class Pinochle extends CardGame {
 
     public void distributePack() {
         // Display top 2 cards from pack
-
         topTwo.setView(this, new RowLayout(playingLocation, (topTwo.getNumberOfCards() + 2) * trickWidth));
         topTwo.draw();
 
-        for (Card card : topTwo.getCardList()) {
-            System.out.println("Card = " + card);
-        }
+        if(isAuto){
+            int dealerIndex = (bidWinPlayerIndex + 1) % nbPlayers;
+            String[] computerExtras = properties.getProperty("players.0.extra_cards").split(",");
+            String[] humanExtras = properties.getProperty("players.1.extra_cards").split(",");
 
-        if (!isAuto) {
-            // Bid winner selects card
+            // First card from each array = topTwo
+            Card top1 = getCardFromShortString(computerExtras[0].trim(), deck);
+            Card top2 = getCardFromShortString(humanExtras[0].trim(), deck);
+
+
             if (bidWinPlayerIndex == COMPUTER_PLAYER_INDEX) {
-                // Computer won, automatic pick
-                setStatusText("Player " + bidWinPlayerIndex + " thinking...");
-                topTwoSelected = getRandomCardForHand(topTwo);
-                topTwoSelected.removeFromHand(true);
+                hands[COMPUTER_PLAYER_INDEX].insert(top1, true);
+                hands[HUMAN_PLAYER_INDEX].insert(top2, true);
             } else {
-                // Player won
-                topTwo.setTouchEnabled(true);
-                setStatus("Player " + bidWinPlayerIndex + " is playing. Please double click on a card to add to hand.");
-                topTwoSelected = null;
-
-                while (null == topTwoSelected) delay(delayTime);
-                System.out.println("Picked card: " + topTwoSelected);
-                topTwoSelected.removeFromHand(true);
+                hands[HUMAN_PLAYER_INDEX].insert(top1, true);
+                hands[COMPUTER_PLAYER_INDEX].insert(top2, true);
             }
-        }
 
-        // Add selected to bid winner's hand
-        hands[bidWinPlayerIndex].insert(topTwoSelected, true);
+            // Assign rest of extra cards alternately
+            List<String> compRemain = Arrays.asList(computerExtras).subList(1, computerExtras.length);
+            List<String> humanRemain = Arrays.asList(humanExtras).subList(1, humanExtras.length);
 
-        // Add other to other player
-        Card remaining = topTwo.get(0);
-        if (bidWinPlayerIndex == COMPUTER_PLAYER_INDEX) {
-            hands[HUMAN_PLAYER_INDEX].insert(remaining, true);
+            for (int i = 0; i < compRemain.size(); i++) {
+                String cardStr1 = (bidWinPlayerIndex == COMPUTER_PLAYER_INDEX) ? compRemain.get(i) : humanRemain.get(i);
+                String cardStr2 = (bidWinPlayerIndex == COMPUTER_PLAYER_INDEX) ? humanRemain.get(i) : compRemain.get(i);
+
+                Card c1 = getCardFromShortString(cardStr1.trim(), deck);
+                Card c2 = getCardFromShortString(cardStr2.trim(), deck);
+
+                //c1.removeFromHand(false);
+                //c2.removeFromHand(false);
+
+                hands[bidWinPlayerIndex].insert(c1, true);
+                hands[dealerIndex].insert(c2, true);
+            }
+
+
         } else {
-            hands[COMPUTER_PLAYER_INDEX].insert(remaining, true);
-        }
+            for (Card card : topTwo.getCardList()) {
+                System.out.println("Card = " + card);
+            }
 
-        // Alternate between cards until pack is fully given out
-        ArrayList<Card> restOfPack = pack.getCardList();
-        int tempIndex = 0;
-        for (Card card : restOfPack) {
-            if (bidWinPlayerIndex == COMPUTER_PLAYER_INDEX) {
-                if (tempIndex % 2 == 0) {
-                    hands[COMPUTER_PLAYER_INDEX].insert(card, true);
+            if (!isAuto) {
+                // Bid winner selects card
+                if (bidWinPlayerIndex == COMPUTER_PLAYER_INDEX) {
+                    // Computer won, automatic pick
+                    setStatusText("Player " + bidWinPlayerIndex + " thinking...");
+                    topTwoSelected = getRandomCardForHand(topTwo);
+                    topTwoSelected.removeFromHand(true);
                 } else {
-                    hands[HUMAN_PLAYER_INDEX].insert(card, true);
-                }
-            } else {
-                if (tempIndex % 2 == 0) {
-                    hands[HUMAN_PLAYER_INDEX].insert(card, true);
-                } else {
-                    hands[COMPUTER_PLAYER_INDEX].insert(card, true);
+                    // Player won
+                    topTwo.setTouchEnabled(true);
+                    setStatus("Player " + bidWinPlayerIndex + " is playing. Please double click on a card to add to hand.");
+                    topTwoSelected = null;
+
+                    while (null == topTwoSelected) delay(delayTime);
+                    System.out.println("Picked card: " + topTwoSelected);
+                    topTwoSelected.removeFromHand(true);
                 }
             }
-            tempIndex++;
-        }
 
+            // Add selected to bid winner's hand
+            hands[bidWinPlayerIndex].insert(topTwoSelected, true);
+
+            Card remaining = topTwo.get(0);
+            if (bidWinPlayerIndex == COMPUTER_PLAYER_INDEX) {
+                hands[HUMAN_PLAYER_INDEX].insert(remaining, true);
+            } else {
+                hands[COMPUTER_PLAYER_INDEX].insert(remaining, true);
+            }
+
+            // Alternate between cards until pack is fully given out
+            ArrayList<Card> restOfPack = pack.getCardList();
+            int tempIndex = 0;
+            for (Card card : restOfPack) {
+                if (bidWinPlayerIndex == COMPUTER_PLAYER_INDEX) {
+                    if (tempIndex % 2 == 0) {
+                        hands[COMPUTER_PLAYER_INDEX].insert(card, true);
+                    } else {
+                        hands[HUMAN_PLAYER_INDEX].insert(card, true);
+                    }
+                } else {
+                    if (tempIndex % 2 == 0) {
+                        hands[HUMAN_PLAYER_INDEX].insert(card, true);
+                    } else {
+                        hands[COMPUTER_PLAYER_INDEX].insert(card, true);
+                    }
+                }
+                tempIndex++;
+            }
+
+        }
 
         // Drawing both hands
         for (int i = 0; i < nbPlayers; i++) {
             //hands[i].setView(this, layouts[i]);
             hands[i].draw();
         }
+        System.out.println("done drawing");
+
     }
 
     public void discardCards() {
@@ -943,16 +1052,33 @@ public class Pinochle extends CardGame {
                 }
                 nextPlayer = (nextPlayer + 1) % nbPlayers;
             } else {
+
                 //auto mode - what to do??
                 if (nextPlayer == HUMAN_PLAYER_INDEX) {
+                    System.out.println("player discarding");
                     // Auto discard randomly for human (or use test config)
-                    selected = getRandomCardForHand(hands[HUMAN_PLAYER_INDEX]);
-                    selected.removeFromHand(true);
+                    //selected = getRandomCardForHand(hands[HUMAN_PLAYER_INDEX]);
+                    //selected.removeFromHand(true);
                 } else {
-                    selected = toDiscard.get(discardIndex);
-                    selected.removeFromHand(true);
-                    discardIndex++;
+                    // computer discards one card
+                    System.out.println("computer discarding");
+                    setStatusText("Player " + nextPlayer + " thinking...");
+                    /*
+                    HELLO THIS LOGIC FOR HOW THE COMPUTER PLAYER DECIDES ON DISCARDING STILL NEEDS WORK !!
+                     */
+
+                    if (discardIndex < toDiscard.size()) {
+                        selected = toDiscard.get(discardIndex);
+                        selected.removeFromHand(true);
+                        discardIndex++;
+                    } else {
+                        // by est. - randomly select - still use it if louie(me)'s doesn't work lol
+                        selected = getRandomCardForHand(hands[COMPUTER_PLAYER_INDEX]);
+                        selected.removeFromHand(true);
+                    }
+
                 }
+                nextPlayer = (nextPlayer + 1) % nbPlayers;
             }
         }
     }
@@ -996,6 +1122,9 @@ public class Pinochle extends CardGame {
         //get the shorthand value
         return Suit.valueOf(name).getSuitShortHand();
     }
+
+
+
 
     //Setter methods
     public static void setTrumpSuit(String trumpSuit) {
