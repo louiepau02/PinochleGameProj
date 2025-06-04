@@ -193,28 +193,42 @@ public class Pinochle extends CardGame {
 
 
         if(cutThroatMode){
-            // Add top 2 cards from pack
-            for (int i = 0; i < 2; i++) {
-                Card tempCard = pack.getCard(i);
+            if(isAuto){
 
-                tempCard.removeFromHand(false);
-                topTwo.insert(tempCard, true);
-            }
+            }else{
+                // Add top 2 cards from pack
+                for (int i = 0; i < 2; i++) {
+                    Card tempCard = pack.getCard(i);
 
-            System.out.println(hands[HUMAN_PLAYER_INDEX].getCardList());
-            System.out.println(topTwo.getCardList());
-            // Define listener for choosing a card from the pack
-            CardListener packListener = new CardAdapter()  // Listener for dealing pack
-            {
-                public void leftDoubleClicked(Card card) {
-                    setStatus("Card is not valid. Player needs to choose one card from the two.");
-                    topTwoSelected = card;
-                    topTwo.setTouchEnabled(false);
+                    tempCard.removeFromHand(false);
+                    topTwo.insert(tempCard, true);
                 }
-            };
-            topTwo.addCardListener(packListener);
 
-            topTwo.setView(this, new RowLayout(playingLocation, (topTwo.getNumberOfCards() + 3) * trickWidth));
+                System.out.println(hands[HUMAN_PLAYER_INDEX].getCardList());
+                System.out.println(topTwo.getCardList());
+                // Define listener for choosing a card from the pack
+                CardListener packListener = new CardAdapter()  // Listener for dealing pack
+                {
+                    public void leftDoubleClicked(Card card) {
+                        setStatus("Card is not valid. Player needs to choose one card from the two.");
+                        topTwoSelected = card;
+                        topTwo.setTouchEnabled(false);
+                    }
+                };
+                topTwo.addCardListener(packListener);
+
+                topTwo.setView(this, new RowLayout(playingLocation, (topTwo.getNumberOfCards() + 3) * trickWidth));
+
+                // graphics
+                RowLayout[] layouts = new RowLayout[nbPlayers];
+                for (int i = 0; i < nbPlayers; i++) {
+                    layouts[i] = new RowLayout(handLocations[i], handWidth);
+                    layouts[i].setRotationAngle(180 * i);
+                    hands[i].setView(this, layouts[i]);
+                    hands[i].setTargetArea(new TargetArea(playingLocation));
+                    hands[i].draw();
+                }
+            }
         } else {
             // graphics
             RowLayout[] layouts = new RowLayout[nbPlayers];
