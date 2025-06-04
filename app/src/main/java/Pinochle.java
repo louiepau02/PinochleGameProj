@@ -207,6 +207,8 @@ public class Pinochle extends CardGame {
                 Card top1 = getCardFromShortString(computerExtras[0].trim(), deck);
                 Card top2 = getCardFromShortString(humanExtras[0].trim(), deck);
 
+                System.out.println("top1==top2?? " + top1.equals(top2));
+
                 top1.removeFromHand(false);
                 top2.removeFromHand(false);
 
@@ -214,7 +216,6 @@ public class Pinochle extends CardGame {
                 topTwo.insert(top2, true);
 
                 topTwo.setView(this, new RowLayout(playingLocation, (topTwo.getNumberOfCards() + 3) * trickWidth));
-
 
                 RowLayout[] layouts = new RowLayout[nbPlayers];
                 for (int i = 0; i < nbPlayers; i++) {
@@ -280,12 +281,13 @@ public class Pinochle extends CardGame {
         Rank rank = getRankFromString(s);
         Suit suit = getSuitFromString(s);
 
-        System.out.println("rank is" + rank + "suit is "+ suit);
+        //System.out.println("rank is" + rank + "suit is "+ suit);
 
 
         if (rank == null || suit == null) {
             System.err.println("Invalid card string: " + s);
         }
+
 
         String suitChar = suit.getSuitShortHand();  // Use suit enum directly
         String key = rank.toString() + suitChar;
@@ -307,6 +309,7 @@ public class Pinochle extends CardGame {
                 break;
         }
         cardDistributed.put(key, used + 1);
+
 
         return deck.cards[deck.getSuitId(suit)][deck.getRankId(rank)];
     }
@@ -913,6 +916,8 @@ public class Pinochle extends CardGame {
 
         if(isAuto){
             int dealerIndex = (bidWinPlayerIndex + 1) % nbPlayers;
+            String[] computerInit = properties.getProperty("players.0.initialcards").split(",");
+            String[] humanInit = properties.getProperty("players.1.initialcards").split(",");
             String[] computerExtras = properties.getProperty("players.0.extra_cards").split(",");
             String[] humanExtras = properties.getProperty("players.1.extra_cards").split(",");
 
@@ -920,6 +925,18 @@ public class Pinochle extends CardGame {
             Card top1 = getCardFromShortString(computerExtras[0].trim(), deck);
             Card top2 = getCardFromShortString(humanExtras[0].trim(), deck);
 
+
+            System.out.println(top1);
+            System.out.println(top2);
+
+            //initialise cardUsedList
+            for(String cardStr : computerInit){
+                Card c = getCardFromShortString(cardStr, deck);
+            }
+
+            for(String cardStr : humanInit){
+                Card c = getCardFromShortString(cardStr, deck);
+            }
 
             if (bidWinPlayerIndex == COMPUTER_PLAYER_INDEX) {
                 hands[COMPUTER_PLAYER_INDEX].insert(top1, true);
@@ -933,19 +950,23 @@ public class Pinochle extends CardGame {
             List<String> compRemain = Arrays.asList(computerExtras).subList(1, computerExtras.length);
             List<String> humanRemain = Arrays.asList(humanExtras).subList(1, humanExtras.length);
 
-            for (int i = 0; i < compRemain.size(); i++) {
-                String cardStr1 = (bidWinPlayerIndex == COMPUTER_PLAYER_INDEX) ? compRemain.get(i) : humanRemain.get(i);
-                String cardStr2 = (bidWinPlayerIndex == COMPUTER_PLAYER_INDEX) ? humanRemain.get(i) : compRemain.get(i);
+            System.out.println("computer remain = " + compRemain);
+            System.out.println("human remain = " + humanRemain);
 
-                Card c1 = getCardFromShortString(cardStr1.trim(), deck);
-                Card c2 = getCardFromShortString(cardStr2.trim(), deck);
 
-                //c1.removeFromHand(false);
-                //c2.removeFromHand(false);
-
-                hands[bidWinPlayerIndex].insert(c1, true);
-                hands[dealerIndex].insert(c2, true);
+            for(String cardStr : compRemain){
+                Card c = getCardFromShortString(cardStr, deck);
+                System.out.println("ADDING CARD = " + c);
+                hands[COMPUTER_PLAYER_INDEX].insert(c, true);
+                System.out.println("computer = " + hands[COMPUTER_PLAYER_INDEX]);
             }
+
+            for(String cardStr : humanRemain){
+                Card c = getCardFromShortString(cardStr, deck);
+                hands[HUMAN_PLAYER_INDEX].insert(c, true);
+                System.out.println("player has " + hands[HUMAN_PLAYER_INDEX]);
+            }
+
 
 
         } else {
@@ -1019,9 +1040,12 @@ public class Pinochle extends CardGame {
 
         //for computer discarding 12 cards
         List<Card> computerHand = hands[COMPUTER_PLAYER_INDEX].getCardList();
+        List<Card> humanHand = hands[HUMAN_PLAYER_INDEX].getCardList();
         List<Card> toDiscard = chooseCardsToDiscard(computerHand, Pinochle.trumpSuit);
         int discardIndex = 0;
 
+        System.out.println(humanHand);
+        System.out.println(computerHand);
 
         for (int i = 0; i < 24; i++) {
             if (!isAuto) {
@@ -1053,25 +1077,26 @@ public class Pinochle extends CardGame {
                 nextPlayer = (nextPlayer + 1) % nbPlayers;
             } else {
 
-                //auto mode - what to do??
                 if (nextPlayer == HUMAN_PLAYER_INDEX) {
                     System.out.println("player discarding");
                     // Auto discard randomly for human (or use test config)
-                    //selected = getRandomCardForHand(hands[HUMAN_PLAYER_INDEX]);
-                    //selected.removeFromHand(true);
+                    selected = getRandomCardForHand(hands[HUMAN_PLAYER_INDEX]);
+                    selected.removeFromHand(true);
                 } else {
                     // computer discards one card
-                    System.out.println("computer discarding");
                     setStatusText("Player " + nextPlayer + " thinking...");
                     /*
                     HELLO THIS LOGIC FOR HOW THE COMPUTER PLAYER DECIDES ON DISCARDING STILL NEEDS WORK !!
                      */
 
                     if (discardIndex < toDiscard.size()) {
+                        System.out.println("computer discarding");
                         selected = toDiscard.get(discardIndex);
+                        System.out.println("discarding " + selected);
                         selected.removeFromHand(true);
                         discardIndex++;
                     } else {
+                        System.out.println("removing randomly");
                         // by est. - randomly select - still use it if louie(me)'s doesn't work lol
                         selected = getRandomCardForHand(hands[COMPUTER_PLAYER_INDEX]);
                         selected.removeFromHand(true);
