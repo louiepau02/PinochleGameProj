@@ -14,6 +14,7 @@ public class TestGame {
     private String runningGame(String propertiesFile) {
         final Properties properties = PropertiesLoader.loadPropertiesFile(propertiesFile);
         String logResult = new Pinochle(properties).runApp();
+        System.out.println("logResult = " + logResult);
         return logResult;
     }
 

@@ -915,10 +915,6 @@ public class Pinochle extends CardGame {
                     /*
                     HELLO THIS LOGIC FOR HOW THE COMPUTER PLAYER DECIDES ON DISCARDING STILL NEEDS WORK !!
                      */
-//                    Map<Suit, Integer> handSuitCount = createDictOfComputerHand();
-//                    Suit smallestSuit = findSmallestSuit(handSuitCount); // get the smallest suit
-//                    List<Card> toRemove = (hands[COMPUTER_PLAYER_INDEX]).getCardsWithSuit(smallestSuit);
-//                    System.out.println("Cards to remove: " + toRemove);
 
                     if (discardIndex < toDiscard.size()) {
                         selected = toDiscard.get(discardIndex);
