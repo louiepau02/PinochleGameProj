@@ -90,6 +90,11 @@ public final class Meld {
         }
     }
 
+    public static void deleteMeld(){
+        instance = null;
+
+    }
+
     public List<MeldDecorator> getMelds() {
         return melds;
     }

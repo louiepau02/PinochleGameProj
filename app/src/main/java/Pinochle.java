@@ -920,6 +920,7 @@ public class Pinochle extends CardGame {
         setStatusText(winText);
         refresh();
         addEndOfGameToLog(winners);
+        Meld.deleteMeld();
 
         return logResult.toString();
     }
