@@ -133,7 +133,7 @@ public class Pinochle extends CardGame {
 
     private void initScore() {
         for (int i = 0; i < nbPlayers; i++) {
-            // scores[i] = 0;
+            scores[i] = 0;
             String text = "[" + String.valueOf(scores[i]) + "]";
             scoreActors[i] = new TextActor(text, Color.WHITE, bgColor, bigFont);
             addActor(scoreActors[i], scoreLocations[i]);
@@ -164,6 +164,7 @@ public class Pinochle extends CardGame {
     private Card topTwoSelected;
 
     private void initGame() {
+        trumpSuit = null;
         hands = new Hand[nbPlayers];
         trickWinningHands = new Hand[nbPlayers];
         for (int i = 0; i < nbPlayers; i++) {
@@ -204,8 +205,8 @@ public class Pinochle extends CardGame {
                 String[] humanExtras = properties.getProperty("players.1.extra_cards").split(",");
 
                 // the top two
-                Card top1 = getCardFromShortString(computerExtras[0].trim(), deck);
-                Card top2 = getCardFromShortString(humanExtras[0].trim(), deck);
+                Card top1 = pack.get(0);
+                Card top2 = pack.get(1);
 
                 System.out.println("top1==top2?? " + top1.equals(top2));
 
@@ -275,43 +276,68 @@ public class Pinochle extends CardGame {
 
 
     //from short string in test properties file - card
-    private Card getCardFromShortString(String s, Deck deck) {
+    private Card getCardFromShortString(String s, Hand pack) {
+        Card returnCard;
+        System.out.println();
         if (s == null || s.length() < 2) return null;
+
+        String [] suits = {"C", "D", "H", "S"};
 
         Rank rank = getRankFromString(s);
         Suit suit = getSuitFromString(s);
 
-        //System.out.println("rank is" + rank + "suit is "+ suit);
+        System.out.println("rank is" + rank + "suit is "+ suit);
 
 
         if (rank == null || suit == null) {
             System.err.println("Invalid card string: " + s);
+            return null;
         }
 
+        System.out.println("pack: " + pack);
 
         String suitChar = suit.getSuitShortHand();  // Use suit enum directly
         String key = rank.toString() + suitChar;
+        System.out.println("rank is" + rank + "suit is "+ suitChar);
         int used = cardDistributed.getOrDefault(key, 0);
 
-        // Map to the correct TWO variant
-        switch (suitChar) {
-            case "C":
-                suit = (used == 0) ? Suit.CLUBS : Suit.CLUBSTWO;
-                break;
-            case "D":
-                suit = (used == 0) ? Suit.DIAMONDS : Suit.DIAMONDSTWO;
-                break;
-            case "H":
-                suit = (used == 0) ? Suit.HEARTS : Suit.HEARTSTWO;
-                break;
-            case "S":
-                suit = (used == 0) ? Suit.SPADES : Suit.SPADESTWO;
-                break;
+
+
+        String strSuit = null;
+
+        for(String suitCharacter: suits){
+            System.out.println("current suit is" + suitCharacter + "suit is "+ suitChar);
+            if(suitCharacter.equals(suitChar)){
+                System.out.println("here");
+                System.out.println("pack.getCard(suit, rank) = "+ pack.getCard(suit, rank));
+                if(pack.getCard(suit, rank) == null){
+                    System.out.println("here2");
+                    if(suit.toString().contains("TWO")){
+                        System.out.println("here4");
+                        strSuit = suit.toString().substring(suit.toString().length()-2);
+                        break;
+                    } else {
+                        System.out.println("here5");
+                        strSuit = suit + "TWO";
+                        break;
+                    }
+                } else {
+                    returnCard = pack.getCard(suit, rank);
+                    pack.remove(returnCard, false);
+                    return returnCard;
+                }
+            }
         }
+
+
+        System.out.println("Suit string = "+ strSuit);
+
+        suit = Suit.valueOf(strSuit);
         cardDistributed.put(key, used + 1);
 
-
-        return deck.cards[deck.getSuitId(suit)][deck.getRankId(rank)];
+        returnCard = pack.getCard(suit, rank);
+        pack.remove(returnCard, false);
+        return returnCard;
     }
 
     // return random Card from ArrayList
@@ -387,7 +413,7 @@ public class Pinochle extends CardGame {
 
     private Suit getSuitFromString(String cardName) {
         String rankString = cardName.substring(0, cardName.length() - 1);
-        String suitString = cardName.substring(cardName.length() - 1, cardName.length());
+        String suitString = cardName.substring(cardName.length() - 1);
         Integer rankValue = Integer.parseInt(rankString);
 
         for (Suit suit : Suit.values()) {
@@ -767,6 +793,7 @@ public class Pinochle extends CardGame {
         }
         addTrumpInfoToLog();
 
+        addPlayerCardsToLog();
         if(cutThroatMode){
             discardCards();
         }
@@ -775,7 +802,8 @@ public class Pinochle extends CardGame {
 
         int nextPlayer = bidWinPlayerIndex;
         int numberOfCards = hands[COMPUTER_PLAYER_INDEX].getNumberOfCards();
-        addPlayerCardsToLog();
+
+
         for (int i = 0; i < numberOfCards; i++) {
             addRoundInfoToLog(i);
             for (int j = 0; j < nbPlayers; j++) {
@@ -922,22 +950,31 @@ public class Pinochle extends CardGame {
             String[] humanExtras = properties.getProperty("players.1.extra_cards").split(",");
 
             // First card from each array = topTwo
+            /*
             Card top1 = getCardFromShortString(computerExtras[0].trim(), deck);
             Card top2 = getCardFromShortString(humanExtras[0].trim(), deck);
 
 
             System.out.println(top1);
-            System.out.println(top2);
-
+            System.out.println(top2);*/
+            pack.insert(topTwo,false);
             //initialise cardUsedList
-            for(String cardStr : computerInit){
-                Card c = getCardFromShortString(cardStr, deck);
+            System.out.println("computer extras:");
+            for(String cardStr : computerExtras){
+                System.out.print(cardStr+", ");
+                Card c = getCardFromShortString(cardStr, pack);
+                hands[COMPUTER_PLAYER_INDEX].insert(c, true);
+
             }
 
-            for(String cardStr : humanInit){
-                Card c = getCardFromShortString(cardStr, deck);
+            for(String cardStr : humanExtras){
+                System.out.println("Card string is "+cardStr);
+                Card c = getCardFromShortString(cardStr, pack);
+                System.out.println("Card = "+c);
+                hands[HUMAN_PLAYER_INDEX].insert(c, true);
             }
 
+            /*
             if (bidWinPlayerIndex == COMPUTER_PLAYER_INDEX) {
                 hands[COMPUTER_PLAYER_INDEX].insert(top1, true);
                 hands[HUMAN_PLAYER_INDEX].insert(top2, true);
@@ -947,25 +984,35 @@ public class Pinochle extends CardGame {
             }
 
             // Assign rest of extra cards alternately
-            List<String> compRemain = Arrays.asList(computerExtras).subList(1, computerExtras.length);
-            List<String> humanRemain = Arrays.asList(humanExtras).subList(1, humanExtras.length);
+            List<String> compRemain = Arrays.asList(computerExtras);
+            List<String> humanRemain = Arrays.asList(humanExtras);
 
             System.out.println("computer remain = " + compRemain);
             System.out.println("human remain = " + humanRemain);
 
 
             for(String cardStr : compRemain){
-                Card c = getCardFromShortString(cardStr, deck);
+                Card c = getCardFromShortString(cardStr, pack);
                 System.out.println("ADDING CARD = " + c);
-                hands[COMPUTER_PLAYER_INDEX].insert(c, true);
+                if(hands[COMPUTER_PLAYER_INDEX].contains(c)){
+                    System.out.println("Already contains card");
+                    if(c.getRank().toString().contains("TWO")){
+                        String rank = c.getRank().toString();
+                        rank.substring(rank.length()-3);
+                        //Card newCard =
+                    }
+                }
+                hands[COMPUTER_PLAYER_INDEX].insert(c, true);*/
                 System.out.println("computer = " + hands[COMPUTER_PLAYER_INDEX]);
-            }
-
-            for(String cardStr : humanRemain){
-                Card c = getCardFromShortString(cardStr, deck);
-                hands[HUMAN_PLAYER_INDEX].insert(c, true);
                 System.out.println("player has " + hands[HUMAN_PLAYER_INDEX]);
-            }
+
+
+            /*
+            for(String cardStr : humanRemain){
+                Card c = getCardFromShortString(cardStr, pack);
+                hands[HUMAN_PLAYER_INDEX].insert(c, true);
+
+            }*/
 
 
 

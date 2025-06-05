@@ -46,28 +46,28 @@ public final class Meld {
             MeldDecorator base = new MeldDecorator(new BasicMeld());
 
             // Ace Run based melds.
-            MeldDecorator aceRun = new AceRunDecorator(new BasicMeld());
-            MeldDecorator aceRunK = new KingDecorator(new AceRunDecorator(new BasicMeld()));
-            MeldDecorator aceRunQ = new QueenDecorator(new AceRunDecorator(new BasicMeld()));
-            MeldDecorator aceRunRM = new KingDecorator(new QueenDecorator(new AceRunDecorator(new BasicMeld())));
-            MeldDecorator doubleAR = new DoubleDecorator(new AceRunDecorator(new BasicMeld()));
+            MeldDecorator aceRun = new AceRunDecorator(base);
+            MeldDecorator aceRunK = new KingDecorator(new AceRunDecorator(base));
+            MeldDecorator aceRunQ = new QueenDecorator(new AceRunDecorator(base));
+            MeldDecorator aceRunRM = new KingDecorator(new QueenDecorator(new AceRunDecorator((base))));
+            MeldDecorator doubleAR = new DoubleDecorator(new AceRunDecorator(base));
 
             // Marriage based melds.
-            MeldDecorator RM = new KingDecorator(new QueenDecorator(new BasicMeld()));
+            MeldDecorator RM = new KingDecorator(new QueenDecorator(base));
 
 
             // Pinochle based melds.
-            MeldDecorator pinochle = new PinochleDecorator(new BasicMeld());
-            MeldDecorator doubleP = new DoubleDecorator(new PinochleDecorator(new BasicMeld()));
+            MeldDecorator pinochle = new PinochleDecorator(base);
+            MeldDecorator doubleP = new DoubleDecorator(new PinochleDecorator(base));
 
             // Jacks Abound meld.
-            MeldDecorator jacksAbound = new JacksAboundDecorator(new BasicMeld());
+            MeldDecorator jacksAbound = new JacksAboundDecorator(base);
 
             // Aces Around meld.
-            MeldDecorator acesAround = new AcesAroundDecorator(new BasicMeld());
+            MeldDecorator acesAround = new AcesAroundDecorator(base);
 
             // Dix meld.
-            MeldDecorator dix = new DixDecorator(new BasicMeld());
+            MeldDecorator dix = new DixDecorator(base);
 
 
             // Add melds to list in the correct order based on score in decreasing order.

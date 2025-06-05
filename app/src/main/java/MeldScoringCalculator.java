@@ -10,6 +10,7 @@ public class MeldScoringCalculator {
         // grab the pre-built, priority-ordered decorator chains
         this.pinochle = pinochle;
         this.meldsToCheck = Meld.getInstance(pinochle.isMeldAdditional()).getMelds();
+        System.out.println("Meld decorators:"+ meldsToCheck);
     }
 
     public int calculateScore(ArrayList<Card> cardList){
@@ -23,6 +24,8 @@ public class MeldScoringCalculator {
     private int calculateMeldingScore(List<Card> list){
         int totalScore = 0;
 
+        //System.out.println("Meld decorators:"+ meldsToCheck);
+
 
         //testing - print statement
         //System.out.println("Initial hand cards: ");
@@ -35,14 +38,14 @@ public class MeldScoringCalculator {
             List<String> cardsToRemove = meld.getHandToCheck();
 
             //testing - print statement
-            // System.out.println("Checking meld: " + meld.getClass().getSimpleName());
+            System.out.println("Checking meld: " + meld.getClass().getSimpleName());
             //testing - print statement
-            // System.out.println("Meld requires cards: " + cardsToRemove);
+            System.out.println("Meld requires cards: " + cardsToRemove);
             //for each meld we call getHandToCheck to create the list(using card_to_remove logic)
 
             //actual code
             if(checkCardInMeld(list, cardsToRemove)){
-                //System.out.println("score to be added" + meld.getScore());
+                System.out.println("score to be added" + meld.getScore());
                 totalScore += meld.getScore();
                 list = removeCardsFromHand(list, cardsToRemove);
             }
