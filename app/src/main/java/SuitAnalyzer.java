@@ -65,29 +65,3 @@ public class SuitAnalyzer {
         return suitCount;
     }
 }
-
-
-
-
-/*
-private int bidThreshold(Map<String, Integer> suitCount, ArrayList<Card> hand, int playerIndex){
-
-        int maxSuitValue = Collections.max(suitCount.values());
-
-
-        int largestNum = 0;
-        for (String key : suitCount.keySet()) { // diamonds, hearts, spades, club
-            int tempcount = 0;
-
-            for (Card card : hand){
-                if (card.getRank()== Rank.ACE){tempcount += 11;} // Aces
-                if (card.getRank()== Rank.TEN){tempcount += 10;} // 10s
-                if (card.getRank()== Rank.KING){tempcount += 4;} // Kings
-                if (tempcount > largestNum){largestNum = tempcount;}
-            }
-        }
-
-        return (Math.max(maxSuitValue, largestNum) + pinochle.getScores(playerIndex)); // need to find this;
-    }
-
- */

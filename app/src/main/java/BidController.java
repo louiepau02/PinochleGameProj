@@ -212,19 +212,17 @@ public class BidController {
                     countTempTrumpSuit(suitCount); // get the temp Trump suit - not being selected yet
                     MeldScoringCalculator meldScoreCalculator = new MeldScoringCalculator(pinochle);
                     totalMeldScore = meldScoreCalculator.calculateScore(pinochle.getHands(COMPUTER_PLAYER_INDEX));
-                    //System.out.println("meldscore for computer: " + totalMeldScore);
 
                     if (isFirst){
                         // Computer has first bid
                         // Opening bid will be equal to the total meld score of its hand.
-                        System.out.println("Computer is the first bidder");
                         currentBid += totalMeldScore;
                     } else {
                         System.out.println("not first - thinking if they should bid");
                         for (Map.Entry<String, Integer> entry : suitCount.entrySet()){
                             if (entry.getValue() >= 6) { // If hand has 6 or more cards in the same suit
                                 // Raise the bid by 20
-                                System.out.println("bigger than 6 in same suit +20:)");
+                                //System.out.println("bigger than 6 in same suit +20:)");
                                 bidValue += 20;
                                 moreThanSix = true;
                             }
@@ -232,18 +230,16 @@ public class BidController {
 
                         if(!moreThanSix){
                             // Raise by 10
-                            System.out.println("no bigger than 6 in same suit +10:)");
+                            //System.out.println("no bigger than 6 in same suit +10:)");
                             bidValue += 10;
                         }
 
                         int bidThreshold = bidThreshold(suitCount, hand, playerIndex);
-                        System.out.println("bid threshold = " + bidThreshold);
-                        System.out.println("current bid + bidvalue" + (currentBid + bidValue));
 
                         if ((currentBid + bidValue) < bidThreshold){
                             updateBidText(playerIndex, currentBid + bidValue);
                         }else {
-                            System.out.println("Computer giving up on bidding");
+                            //System.out.println("Computer giving up on bidding");
                             bidValue = 0;
                             hasComputerPassed = true;
                         }
@@ -273,17 +269,14 @@ public class BidController {
             displayBidButtons(true);
             updateBidText(playerIndex, 0);
             if (pinochle.isAuto() && humanAutoBids != null && humanAutoBidIndex < humanAutoBids.size()) {
-                System.out.println("human auto bidding now");
                 humanBid = humanAutoBids.get(humanAutoBidIndex);
                 currentBid = currentBid + humanBid;
                 humanAutoBidIndex++;
                 if (humanBid == 0) {
-                    System.out.println("human giving up bidding now");
                     hasHumanPassed = true;
                 }
                 updateBidText(HUMAN_PLAYER_INDEX, currentBid);
             } else {
-                System.out.println("human manual bidding now");
                 while (!hasHumanBid && !hasHumanPassed) pinochle.delay(pinochle.getDelayTime());
             }
             hasHumanBid = true;
@@ -294,7 +287,6 @@ public class BidController {
     private void countTempTrumpSuit(Map<String, Integer> suitCount){
         List<String> tempTrumpSuit = new ArrayList<>();
         int maxCount = -1;
-        System.out.println("finding the trump suit - in bid controller");
         /* Pick the suit with most cards of the same suit in hand*/
         for(Map.Entry<String, Integer> entry : suitCount.entrySet()){
             String suit = entry.getKey();
@@ -317,7 +309,6 @@ public class BidController {
             pinochle.setTrumpSuit(tempTrumpSuit.get(rand.nextInt(tempTrumpSuit.size())));
         }
 
-        System.out.println("the temp trump suit:"+ pinochle.trumpSuit);
     }
 
     /*
@@ -341,7 +332,6 @@ public class BidController {
                 if (tempcount > largestNum){largestNum = tempcount;}
             }
         }
-        System.out.println("In bid threshold - computer's score now " + totalMeldScore);
 
         return (Math.max(maxSuitValue, largestNum) + totalMeldScore); // need to find this;
     }
@@ -354,7 +344,6 @@ public class BidController {
         String player1Bids = properties.getProperty("players.1.bids", ""); // 0,20,10,20,0
 
         if (player0Bids != null) {
-            System.out.println("there is auto bid for player 0 - " + player0Bids);
             if (!player0Bids.isEmpty()) {
                 java.util.List<String> bidStrings = Arrays.asList(player0Bids.split(","));
                 computerAutoBids.addAll(bidStrings.stream().map(Integer::parseInt).toList());
@@ -362,7 +351,6 @@ public class BidController {
         }
 
         if (player1Bids != null) {
-            System.out.println("there is auto bid for player 1 - " + player1Bids);
             if (!player1Bids.isEmpty()) {
                 List<String> bidStrings = Arrays.asList(player1Bids.split(","));
                 humanAutoBids.addAll(bidStrings.stream().map(Integer::parseInt).toList());
@@ -386,9 +374,7 @@ public class BidController {
         boolean isFirst = true;
         do {
             for (int i = 0; i < nbPlayers; i++) {
-                System.out.println("it's player" + i + "turn - is first? " + isFirst);
                 askForBidForPlayerIndex(playerIndex, isFirst);
-                System.out.println("current bid now " + currentBid);
                 isFirst = false;
                 playerIndex = (playerIndex + 1) % nbPlayers;
                 isContinueBidding = !hasHumanPassed && !hasComputerPassed;

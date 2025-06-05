@@ -127,6 +127,18 @@ public class Pinochle extends CardGame {
 
     private final Map<String, Integer> cardDistributed = new HashMap<>();
 
+    //smart tricking part
+    private List<Card> humanPlayedCards = new ArrayList<>();
+    Map<Rank, Integer> normalPoints = Map.of(
+            Rank.ACE, 11,
+            Rank.TEN, 10,
+            Rank.KING, 4,
+            Rank.QUEEN, 3,
+            Rank.JACK, 2,
+            Rank.NINE, 0
+    );
+
+
     /**
      * Score Section
      */
@@ -198,8 +210,6 @@ public class Pinochle extends CardGame {
         if(cutThroatMode){
             if(isAuto){
                 int dealerIndex = (bidWinPlayerIndex + 1) % nbPlayers;
-                System.out.println("bidWinPlayerIndex="+bidWinPlayerIndex);
-                System.out.println("dealerIndex="+dealerIndex);
 
                 String[] computerExtras = properties.getProperty("players.0.extra_cards").split(",");
                 String[] humanExtras = properties.getProperty("players.1.extra_cards").split(",");
@@ -208,7 +218,6 @@ public class Pinochle extends CardGame {
                 Card top1 = pack.get(0);
                 Card top2 = pack.get(1);
 
-                System.out.println("top1==top2?? " + top1.equals(top2));
 
                 top1.removeFromHand(false);
                 top2.removeFromHand(false);
@@ -236,8 +245,6 @@ public class Pinochle extends CardGame {
                     topTwo.insert(tempCard, true);
                 }
 
-                System.out.println(hands[HUMAN_PLAYER_INDEX].getCardList());
-                System.out.println(topTwo.getCardList());
                 // Define listener for choosing a card from the pack
                 CardListener packListener = new CardAdapter()  // Listener for dealing pack
                 {
@@ -286,19 +293,15 @@ public class Pinochle extends CardGame {
         Rank rank = getRankFromString(s);
         Suit suit = getSuitFromString(s);
 
-        System.out.println("rank is" + rank + "suit is "+ suit);
-
 
         if (rank == null || suit == null) {
             System.err.println("Invalid card string: " + s);
             return null;
         }
 
-        System.out.println("pack: " + pack);
 
         String suitChar = suit.getSuitShortHand();  // Use suit enum directly
         String key = rank.toString() + suitChar;
-        System.out.println("rank is" + rank + "suit is "+ suitChar);
         int used = cardDistributed.getOrDefault(key, 0);
 
 
@@ -306,18 +309,12 @@ public class Pinochle extends CardGame {
         String strSuit = null;
 
         for(String suitCharacter: suits){
-            System.out.println("current suit is" + suitCharacter + "suit is "+ suitChar);
             if(suitCharacter.equals(suitChar)){
-                System.out.println("here");
-                System.out.println("pack.getCard(suit, rank) = "+ pack.getCard(suit, rank));
                 if(pack.getCard(suit, rank) == null){
-                    System.out.println("here2");
                     if(suit.toString().contains("TWO")){
-                        System.out.println("here4");
                         strSuit = suit.toString().substring(suit.toString().length()-2);
                         break;
                     } else {
-                        System.out.println("here5");
                         strSuit = suit + "TWO";
                         break;
                     }
@@ -329,8 +326,6 @@ public class Pinochle extends CardGame {
             }
         }
 
-
-        System.out.println("Suit string = "+ strSuit);
 
         suit = Suit.valueOf(strSuit);
         cardDistributed.put(key, used + 1);
@@ -414,7 +409,7 @@ public class Pinochle extends CardGame {
     private Suit getSuitFromString(String cardName) {
         String rankString = cardName.substring(0, cardName.length() - 1);
         String suitString = cardName.substring(cardName.length() - 1);
-        Integer rankValue = Integer.parseInt(rankString);
+        //Integer rankValue = Integer.parseInt(rankString);
 
         for (Suit suit : Suit.values()) {
             if (suit.getSuitShortHand().equals(suitString)) {
@@ -513,9 +508,10 @@ public class Pinochle extends CardGame {
 
         addActor(trumpInstructionActor, trumpInstructionLocation);
         if (bidWinPlayerIndex == COMPUTER_PLAYER_INDEX) {
+            if(!smartBidding){
+                trumpSuit = "C";
+            }
             //keep the one:)
-            //Suit selectedTrumpSuit = Arrays.stream(Suit.values()).findAny().get();
-            //trumpSuit = selectedTrumpSuit.getSuitShortHand();
         } else {
             trumpSuit = null;
             addActor(clubTrumpActor, clubTrumpLocation);
@@ -773,21 +769,18 @@ public class Pinochle extends CardGame {
         //call the controller then the function
         BidController bidController = new BidController(this, properties, currentBid, nbPlayers);
         bidController.askForBid();
-        System.out.println("the trump suit now" + trumpSuit);
         bidWinPlayerIndex = bidController.getBidWinPlayerIndex();
         currentBid = bidController.getCurrentBid();
-        System.out.println("current bid " + currentBid);
         askForTrumpCard();
         if(cutThroatMode){
             distributePack();
         }
 
+        //calculating melding score:)
         for (int i = 0; i < nbPlayers; i++) {
             //or just call newScoringCalculator here
             MeldScoringCalculator calculator = new MeldScoringCalculator(this);
             scores[i] = calculator.calculateScore(hands[i].getCardList());
-            System.out.println("checking player" + i + "score" + scores[i]);
-            System.out.println();
             updateScore(i);
             delay(delayTime);
         }
@@ -803,6 +796,7 @@ public class Pinochle extends CardGame {
         int nextPlayer = bidWinPlayerIndex;
         int numberOfCards = hands[COMPUTER_PLAYER_INDEX].getNumberOfCards();
 
+        int round = 1;
 
         for (int i = 0; i < numberOfCards; i++) {
             addRoundInfoToLog(i);
@@ -836,18 +830,38 @@ public class Pinochle extends CardGame {
 
                 if (!isAuto) {
                     if (HUMAN_PLAYER_INDEX == nextPlayer) {
+                        //human one should be the same for non-auto
                         hands[HUMAN_PLAYER_INDEX].setTouchEnabled(true);
 
                         setStatus("Player " + nextPlayer + " is playing. Please double click on a card to discard");
                         selected = null;
                         while (null == selected) delay(delayTime);
                         selected.removeFromHand(true);
+                        if(smartMode){
+                            humanPlayedCards.add(selected);
+                        }
                     } else {
-                        setStatusText("Player " + nextPlayer + " thinking...");
-                        selected = getRandomCardForHand(hands[nextPlayer]);
-                        selected.removeFromHand(true);
+                        if(smartMode){
+                            if(nextPlayer==bidWinPlayerIndex){
+                                //if computer play card first???
+                                setStatusText("Player " + nextPlayer + " thinking...");
+                                selected = getLowestPointCard(hands[nextPlayer].getCardList());
+                                selected.removeFromHand(true);
+                            } else {
+                                setStatusText("Player " + nextPlayer + " thinking...");
+                                selected = pickCardSmartMode(hands[nextPlayer], humanPlayedCards);
+                                selected.removeFromHand(true);
+                            }
+
+                        } else{
+                            setStatusText("Player " + nextPlayer + " thinking...");
+                            selected = getRandomCardForHand(hands[nextPlayer]);
+                            selected.removeFromHand(true);
+                        }
                     }
                 }
+
+                round++;
 
                 addCardPlayedToLog(nextPlayer, selected);
                 playingArea.insert(selected, true);
@@ -870,11 +884,122 @@ public class Pinochle extends CardGame {
         updateTrickScore();
     }
 
+    private Card pickCardSmartMode(Hand computerHand, List<Card> humanPlayed){
+        //System.out.println("smart mode picking hehe");
+        Card winningCard = null;
+        Card lowestCard = null;
+        Card lastHumanCard = humanPlayed.isEmpty() ? null : humanPlayed.get(humanPlayed.size() - 1);
+
+        List<Card> possibleWinningCard = new ArrayList<>();;
+        List<Card> compCardinHand = computerHand.getCardList();
+
+        for(Card c : compCardinHand){
+            if(competeTrickCard(c, lastHumanCard)){
+                possibleWinningCard.add(c);
+            }
+        }
+
+
+        List<Rank> highRanks = Arrays.asList(Rank.ACE, Rank.TEN);
+
+        // Strategy: If human played a valuable card, try to beat it with best available
+        if (lastHumanCard != null) {
+            Rank hRank = (Rank) lastHumanCard.getRank();
+            Suit hSuit = (Suit) lastHumanCard.getSuit();
+
+            boolean isValuable = highRanks.contains(hRank);
+            boolean isTrumpNine = (hRank == Rank.NINE && hSuit == getSuitFromString(trumpSuit));
+
+            if (isValuable || isTrumpNine) {
+                if (!possibleWinningCard.isEmpty()) {
+                    // Choose the weakest card that still wins
+                    possibleWinningCard.sort(Comparator.comparingInt(c ->
+                            getTrickStrength((Rank) c.getRank())));
+                    winningCard = possibleWinningCard.get(0);
+                    //System.out.println("possible winning " + possibleWinningCard);
+                    //System.out.println("can win - " + winningCard);
+                    return winningCard;
+                } else {
+                    // Can't beat it, throw away worst card
+                    lowestCard = getLowestPointCard(compCardinHand);
+                    //System.out.println("cannot win - " + lowestCard);
+                    return lowestCard;
+                }
+            } else {
+                // Human played low-value card – don't waste good ones
+                // Can't beat it, throw away worst card
+                if (!possibleWinningCard.isEmpty()) {
+                    lowestCard = getLowestPointCard(possibleWinningCard);
+                } else{
+                    lowestCard = getLowestPointCard(compCardinHand);
+                }
+                //System.out.println("can win but not worth:)- " + lowestCard);
+                return lowestCard;
+            }
+        }
+
+
+        return winningCard;
+    }
+
+    private int getTrickStrength(Rank rank) {
+        List<Rank> order = Arrays.asList(Rank.ACE, Rank.TEN, Rank.KING, Rank.QUEEN, Rank.JACK, Rank.NINE);
+        return order.indexOf(rank);
+    }
+
+    private Card getLowestPointCard(List<Card> cards) {
+        return cards.stream()
+                .min(Comparator.comparingInt(c -> getCardPointValue((Rank) c.getRank(), (Suit) c.getSuit())))
+                .orElse(null);
+    }
+
+    private int getCardPointValue(Rank rank, Suit suit) {
+        if (rank == Rank.ACE) return 11;
+        if (rank == Rank.TEN) return 10;
+        if (rank == Rank.KING) return 4;
+        if (rank == Rank.QUEEN) return 3;
+        if (rank == Rank.JACK) return 2;
+        if (rank == Rank.NINE && suit == getSuitFromString(trumpSuit)) return 10;
+        return 0;
+    }
+
+
+    private boolean competeTrickCard(Card cCard, Card hCard){
+        if (cCard == null || hCard == null) return false;
+
+        Suit cSuit = (Suit) cCard.getSuit();
+        Rank cRank = (Rank) cCard.getRank();
+        Suit hSuit = (Suit) hCard.getSuit();
+        Rank hRank = (Rank) hCard.getRank();
+
+        boolean rankHigher = (cRank.getRankCardValue() > hRank.getRankCardValue());
+
+
+        // Case 1: Computer card is trump, human card is not
+        if (cSuit == getSuitFromString(trumpSuit) && hSuit != getSuitFromString(trumpSuit)) {
+            return true;
+        }
+
+        // Case 2: Both are trump
+        if (cSuit == getSuitFromString(trumpSuit) && hSuit == getSuitFromString(trumpSuit)) {
+            return rankHigher;
+        }
+
+        // Case 3: Neither is trump, but same suit (follow suit)
+        if (cSuit == hSuit) {
+            return rankHigher;
+        }
+
+        // Case 4: Computer did not follow suit or is not trump – loses
+        return false;
+
+    }
+
     private void setupPlayerAutoMovements() {
         String player0AutoMovement = properties.getProperty("players.0.cardsPlayed");
         String player1AutoMovement = properties.getProperty("players.1.cardsPlayed");
 
-        String[] playerMovements = new String[]{"", ""};
+//        String[] playerMovements = new String[]{"", ""};
         if (player0AutoMovement != null) {
             playerMovements[0] = player0AutoMovement;
         }
@@ -896,10 +1021,6 @@ public class Pinochle extends CardGame {
         initScores();
         initScore();
         setupPlayerAutoMovements();
-        System.out.println("isAuto" + isAuto);
-        System.out.println("meldAdditional" + meldAdditional);
-        System.out.println("SMART BIDDING" + smartBidding);
-        System.out.println("cut Throat" + cutThroatMode);
         initGame();
         playGame();
 
@@ -950,17 +1071,8 @@ public class Pinochle extends CardGame {
             String[] computerExtras = properties.getProperty("players.0.extra_cards").split(",");
             String[] humanExtras = properties.getProperty("players.1.extra_cards").split(",");
 
-            // First card from each array = topTwo
-            /*
-            Card top1 = getCardFromShortString(computerExtras[0].trim(), deck);
-            Card top2 = getCardFromShortString(humanExtras[0].trim(), deck);
-
-
-            System.out.println(top1);
-            System.out.println(top2);*/
             pack.insert(topTwo,false);
             //initialise cardUsedList
-            System.out.println("computer extras:");
             for(String cardStr : computerExtras){
                 System.out.print(cardStr+", ");
                 Card c = getCardFromShortString(cardStr, pack);
@@ -969,51 +1081,9 @@ public class Pinochle extends CardGame {
             }
 
             for(String cardStr : humanExtras){
-                System.out.println("Card string is "+cardStr);
-                Card c = getCardFromShortString(cardStr, pack);
-                System.out.println("Card = "+c);
-                hands[HUMAN_PLAYER_INDEX].insert(c, true);
-            }
-
-            /*
-            if (bidWinPlayerIndex == COMPUTER_PLAYER_INDEX) {
-                hands[COMPUTER_PLAYER_INDEX].insert(top1, true);
-                hands[HUMAN_PLAYER_INDEX].insert(top2, true);
-            } else {
-                hands[HUMAN_PLAYER_INDEX].insert(top1, true);
-                hands[COMPUTER_PLAYER_INDEX].insert(top2, true);
-            }
-
-            // Assign rest of extra cards alternately
-            List<String> compRemain = Arrays.asList(computerExtras);
-            List<String> humanRemain = Arrays.asList(humanExtras);
-
-            System.out.println("computer remain = " + compRemain);
-            System.out.println("human remain = " + humanRemain);
-
-
-            for(String cardStr : compRemain){
-                Card c = getCardFromShortString(cardStr, pack);
-                System.out.println("ADDING CARD = " + c);
-                if(hands[COMPUTER_PLAYER_INDEX].contains(c)){
-                    System.out.println("Already contains card");
-                    if(c.getRank().toString().contains("TWO")){
-                        String rank = c.getRank().toString();
-                        rank.substring(rank.length()-3);
-                        //Card newCard =
-                    }
-                }
-                hands[COMPUTER_PLAYER_INDEX].insert(c, true);*/
-                System.out.println("computer = " + hands[COMPUTER_PLAYER_INDEX]);
-                System.out.println("player has " + hands[HUMAN_PLAYER_INDEX]);
-
-
-            /*
-            for(String cardStr : humanRemain){
                 Card c = getCardFromShortString(cardStr, pack);
                 hands[HUMAN_PLAYER_INDEX].insert(c, true);
-
-            }*/
+            }
 
 
 
@@ -1036,7 +1106,7 @@ public class Pinochle extends CardGame {
                     topTwoSelected = null;
 
                     while (null == topTwoSelected) delay(delayTime);
-                    System.out.println("Picked card: " + topTwoSelected);
+                    //System.out.println("Picked card: " + topTwoSelected);
                     topTwoSelected.removeFromHand(true);
                 }
             }
@@ -1078,8 +1148,6 @@ public class Pinochle extends CardGame {
             //hands[i].setView(this, layouts[i]);
             hands[i].draw();
         }
-        System.out.println("done drawing");
-
     }
 
     public void discardCards() {
@@ -1092,8 +1160,6 @@ public class Pinochle extends CardGame {
         List<Card> toDiscard = chooseCardsToDiscard(computerHand, Pinochle.trumpSuit);
         int discardIndex = 0;
 
-        System.out.println(humanHand);
-        System.out.println(computerHand);
 
         for (int i = 0; i < 24; i++) {
             if (!isAuto) {
@@ -1126,7 +1192,6 @@ public class Pinochle extends CardGame {
             } else {
 
                 if (nextPlayer == HUMAN_PLAYER_INDEX) {
-                    System.out.println("player discarding");
                     // Auto discard randomly for human (or use test config)
                     selected = getRandomCardForHand(hands[HUMAN_PLAYER_INDEX]);
                     selected.removeFromHand(true);
@@ -1138,13 +1203,10 @@ public class Pinochle extends CardGame {
                      */
 
                     if (discardIndex < toDiscard.size()) {
-                        System.out.println("computer discarding");
                         selected = toDiscard.get(discardIndex);
-                        System.out.println("discarding " + selected);
                         selected.removeFromHand(true);
                         discardIndex++;
                     } else {
-                        System.out.println("removing randomly");
                         // by est. - randomly select - still use it if louie(me)'s doesn't work lol
                         selected = getRandomCardForHand(hands[COMPUTER_PLAYER_INDEX]);
                         selected.removeFromHand(true);
@@ -1187,11 +1249,9 @@ public class Pinochle extends CardGame {
     private String normalizeSuit(Suit suit) {
         String name = suit.name();
         //full name of the suit
-        //System.out.println(name);
         if (name.contains("TWO")) {
             name = name.replace("TWO", "");
         }
-        //System.out.println(Suit.valueOf(name).getSuitShortHand());
         //get the shorthand value
         return Suit.valueOf(name).getSuitShortHand();
     }
