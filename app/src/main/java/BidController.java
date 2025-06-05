@@ -65,7 +65,7 @@ public class BidController {
 
         hasComputerPassed = false;
 
-        System.out.println("init bids");
+        //System.out.println("init bids");
         pinochle.getBidSelectionActor().addButtonListener(new GGButtonListener() {
             @Override
             public void buttonPressed(GGButton ggButton) {

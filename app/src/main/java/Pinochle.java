@@ -285,7 +285,6 @@ public class Pinochle extends CardGame {
     //from short string in test properties file - card
     private Card getCardFromShortString(String s, Hand pack) {
         Card returnCard;
-        System.out.println();
         if (s == null || s.length() < 2) return null;
 
         String [] suits = {"C", "D", "H", "S"};
@@ -326,6 +325,8 @@ public class Pinochle extends CardGame {
             }
         }
 
+
+        //System.out.println("Suit string = "+ strSuit);
 
         suit = Suit.valueOf(strSuit);
         cardDistributed.put(key, used + 1);
@@ -509,7 +510,7 @@ public class Pinochle extends CardGame {
         addActor(trumpInstructionActor, trumpInstructionLocation);
         if (bidWinPlayerIndex == COMPUTER_PLAYER_INDEX) {
             if(!smartBidding){
-                trumpSuit = "C";
+                trumpSuit = properties.getProperty("C");
             }
             //keep the one:)
         } else {
@@ -885,7 +886,6 @@ public class Pinochle extends CardGame {
     }
 
     private Card pickCardSmartMode(Hand computerHand, List<Card> humanPlayed){
-        //System.out.println("smart mode picking hehe");
         Card winningCard = null;
         Card lowestCard = null;
         Card lastHumanCard = humanPlayed.isEmpty() ? null : humanPlayed.get(humanPlayed.size() - 1);
@@ -916,8 +916,7 @@ public class Pinochle extends CardGame {
                     possibleWinningCard.sort(Comparator.comparingInt(c ->
                             getTrickStrength((Rank) c.getRank())));
                     winningCard = possibleWinningCard.get(0);
-                    //System.out.println("possible winning " + possibleWinningCard);
-                    //System.out.println("can win - " + winningCard);
+                   // System.out.println("can win - " + winningCard);
                     return winningCard;
                 } else {
                     // Can't beat it, throw away worst card
@@ -930,6 +929,7 @@ public class Pinochle extends CardGame {
                 // Can't beat it, throw away worst card
                 if (!possibleWinningCard.isEmpty()) {
                     lowestCard = getLowestPointCard(possibleWinningCard);
+
                 } else{
                     lowestCard = getLowestPointCard(compCardinHand);
                 }
@@ -999,7 +999,7 @@ public class Pinochle extends CardGame {
         String player0AutoMovement = properties.getProperty("players.0.cardsPlayed");
         String player1AutoMovement = properties.getProperty("players.1.cardsPlayed");
 
-//        String[] playerMovements = new String[]{"", ""};
+        String[] playerMovements = new String[]{"", ""};
         if (player0AutoMovement != null) {
             playerMovements[0] = player0AutoMovement;
         }
@@ -1071,8 +1071,17 @@ public class Pinochle extends CardGame {
             String[] computerExtras = properties.getProperty("players.0.extra_cards").split(",");
             String[] humanExtras = properties.getProperty("players.1.extra_cards").split(",");
 
+            // First card from each array = topTwo
+            /*
+            Card top1 = getCardFromShortString(computerExtras[0].trim(), deck);
+            Card top2 = getCardFromShortString(humanExtras[0].trim(), deck);
+
+
+            System.out.println(top1);
+            System.out.println(top2);*/
             pack.insert(topTwo,false);
             //initialise cardUsedList
+            //System.out.println("computer extras:");
             for(String cardStr : computerExtras){
                 System.out.print(cardStr+", ");
                 Card c = getCardFromShortString(cardStr, pack);
@@ -1084,8 +1093,6 @@ public class Pinochle extends CardGame {
                 Card c = getCardFromShortString(cardStr, pack);
                 hands[HUMAN_PLAYER_INDEX].insert(c, true);
             }
-
-
 
         } else {
             for (Card card : topTwo.getCardList()) {
@@ -1148,6 +1155,7 @@ public class Pinochle extends CardGame {
             //hands[i].setView(this, layouts[i]);
             hands[i].draw();
         }
+
     }
 
     public void discardCards() {
@@ -1249,9 +1257,11 @@ public class Pinochle extends CardGame {
     private String normalizeSuit(Suit suit) {
         String name = suit.name();
         //full name of the suit
+        //System.out.println(name);
         if (name.contains("TWO")) {
             name = name.replace("TWO", "");
         }
+        //System.out.println(Suit.valueOf(name).getSuitShortHand());
         //get the shorthand value
         return Suit.valueOf(name).getSuitShortHand();
     }
