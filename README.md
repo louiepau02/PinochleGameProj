@@ -12,6 +12,10 @@ A key focus of the project is building **rule-based AI players** that make strat
 
 ---
 
+## 🎮 Live Demo
+
+👉 https://drive.google.com/file/d/1L0cOeSVj5zkD8GhXtoeC5jV2mVMs8A38/view?usp=drive_link
+
 ## ✨ Features
 
 * 🧠 **AI Bidding System**
